@@ -189,32 +189,39 @@ function scheduleEvent() {
 
 // --- Start / stop playback ---
 async function play() {
+  if (isPlaying) return;          // already playing (or starting): never stack two graphs
+  isPlaying = true;
+  reflectPlayState();
   if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
   if (ctx.state === "suspended") await ctx.resume();
+  if (!isPlaying) return;         // stopped again during the async resume
   buildGraph(PRESETS[currentPreset]);
-  isPlaying = true;
   scheduleEvent();
-  reflectPlayState();
 }
 
 function stop() {
-  if (!ctx || !isPlaying) return;
+  if (!isPlaying) return;
   isPlaying = false;
   clearTimeout(eventTimer);
+  reflectPlayState();
+  if (!ctx || !master) return;    // nothing was built yet (stopped during startup)
   const t = ctx.currentTime;
   master.gain.cancelScheduledValues(t);
   master.gain.setTargetAtTime(0, t, FADE / 3);
   voices.forEach((v) => stopVoice(v, t));
   if (noiseNode) noiseNode.noiseGain.gain.setTargetAtTime(0, t, FADE / 3);
-  // release the nodes after the fade
-  const toClose = master;
-  setTimeout(() => {
-    try { noiseNode && noiseNode.src.stop(); } catch (e) {}
-    try { filterLfo && filterLfo.stop(); } catch (e) {}
-    try { toClose.disconnect(); } catch (e) {}
-  }, (FADE + 1) * 1000);
+  // capture this graph's nodes, then drop the globals so a new play() can't
+  // collide with this teardown — release the captured nodes after the fade
+  const dead = { master, filterLfo, noiseNode };
+  master = null;
+  filterLfo = null;
+  noiseNode = null;
   voices = [];
-  reflectPlayState();
+  setTimeout(() => {
+    try { dead.noiseNode && dead.noiseNode.src.stop(); } catch (e) {}
+    try { dead.filterLfo && dead.filterLfo.stop(); } catch (e) {}
+    try { dead.master && dead.master.disconnect(); } catch (e) {}
+  }, (FADE + 1) * 1000);
 }
 
 function switchPreset(key) {
@@ -223,9 +230,8 @@ function switchPreset(key) {
   if (isPlaying) {
     // fade out the current one, then rebuild with the new preset
     stop();
+    holdPlayingVisual(); // keep the "playing" look during the crossfade
     setTimeout(() => play(), FADE * 1000 + 200);
-    isPlaying = true; // keep the visual "playing" state during the transition
-    reflectPlayState();
   }
 }
 

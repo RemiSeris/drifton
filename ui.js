@@ -41,6 +41,15 @@ function reflectPlayState() {
   breathEl.classList.toggle("active", isPlaying);
 }
 
+// Keep the "playing" look while a preset crossfade is in flight (engine.js)
+function holdPlayingVisual() {
+  playBtn.classList.add("playing");
+  breathEl.classList.add("active");
+  if (playIcon.firstElementChild) {
+    playIcon.firstElementChild.setAttribute("d", PAUSE_PATH);
+  }
+}
+
 // --- Controls ---
 playBtn.addEventListener("click", () => {
   if (isPlaying) stop();
