@@ -1,0 +1,4 @@
+# Environnements / éditeurs
+.venv/
+.idea/
+.DS_Store
