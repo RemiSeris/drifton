@@ -17,10 +17,10 @@ const STARTER_PATCHES = {
   },
 
   // Bell-like: pure sines, instant attack, sustain at 0 so the note dies away on its own.
-  // Osc B sits an octave and a fifth above (a quiet overtone).
+  // Osc B is a quiet sine a fifth above.
   Bells: {
     "a.wave": "sine", "a.octave": 1, "a.unison": 1, "a.spread": 0, "a.width": 0, "a.level": 0.7,
-    "b.wave": "triangle", "b.octave": 2, "b.semi": 7, "b.level": 0.15,
+    "b.wave": "sine", "b.octave": 0, "b.semi": 7, "b.level": 0.15,
     "noise.level": 0,
     "filter.cutoff": 6000, "filter.res": 0, "filter.env": 0,
     "amp.attack": 0.003, "amp.decay": 2.5, "amp.sustain": 0, "amp.release": 2.5,
