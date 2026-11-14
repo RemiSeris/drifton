@@ -29,7 +29,7 @@ Principes de la musique fonctionnelle à respecter :
 | Source du son | **synthé maison dans le navigateur** joué par un générateur à base de règles, plutôt que des fichiers audio exportés d'Ableton | un sample est figé ; un synthé garde tous ses paramètres vivants, donc pilotables par le conducteur et par l'apprentissage |
 | Wavetables Serum | abandonné | en ambient, le caractère vient surtout du mouvement, des effets, de l'unisson et du filtre, pas de la forme d'onde |
 | Samples | en complément seulement (textures, matière granulaire) | utile pour ce qu'un synthé ne sait pas faire |
-| ML | plus tard ; d'abord règles + apprentissage simple des préférences (bandit) | la génération audio par ML (MusicGen…) est trop lourde et peu contrôlable pour du temps réel navigateur |
+| ML | plus tard ; d'abord règles + apprentissage simple des préférences (bandit) ; un LLM pour interpréter le feedback écrit (étape 7b), en restant dans le gratuit | la génération audio par ML (MusicGen…) est trop lourde et peu contrôlable pour du temps réel navigateur |
 | Plan B si le synthé maison plafonne | RNBO (Max) ou Faust, compilés pour le web | le générateur ne change pas |
 | Façon de travailler | Claude construit les briques, on les décortique ensemble | l'utilisateur débute en JS, connaît Python, compose dans Ableton (Serum, Massive) |
 
@@ -92,6 +92,11 @@ Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `ind
 
 ### Adaptation
 - [ ] **7. Feedback** : 👍/👎 + boutons « pourquoi ? », enregistrement des paramètres au moment du clic (localStorage), vue « ce que Drifton a appris ».
+- [ ] **7b. Feedback en langage naturel** : l'utilisateur écrit ce qu'il aime ou non (« trop brillant », « ça manque de vie », « trop triste »). Un LLM reçoit la phrase + l'état actuel des paramètres + la liste de ce qu'il peut modifier, et répond en JSON imposé par un schéma : des ajustements bornés (plages autorisées, petits pas) + des étiquettes (`trop_brillant`, `trop_chargé`…). Effet immédiat sur la musique ; les étiquettes nourrissent l'apprentissage (étape 8). Peut aussi servir à démarrer une session (« musique pour coder tard le soir »). 👍/👎 restent pour le réflexe rapide, le texte est optionnel (plus tard : dictée vocale). Vient après le conducteur (il faut des paramètres qui bougent).
+  - **Contrainte : rester gratuit.** Pistes, de la plus simple à la plus lourde :
+    1. un petit modèle qui tourne **dans le navigateur** (WebGPU : WebLLM, transformers.js…) : gratuit, aucun serveur, compatible GitHub Pages ; un modèle de 1 à 3 milliards de paramètres suffit pour transformer une phrase courte en JSON ; inconvénient : un téléchargement de quelques centaines de Mo à quelques Go la première fois ;
+    2. un **LLM local** (Ollama…) sur une machine à soi, si le projet est hébergé ailleurs un jour ;
+    3. une **API payante en usage très limité** (quelques centimes par mois), avec la clé de l'utilisateur stockée dans son navigateur, ou derrière un relais gratuit (Cloudflare Worker) qui garde la clé.
 - [ ] **8. Apprentissage** : le conducteur passe plus de temps dans les zones aimées, tout en continuant à explorer (bandit / échantillonnage de Thompson).
 - [ ] **9. Signaux implicites et contextes** : sauts, durée d'écoute, changements de volume ; profils focus / relax / sommeil ; heure de la journée.
 
@@ -106,6 +111,8 @@ Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `ind
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`.
 
 ## Journal
+
+- **2026-11-14** — Idée ajoutée : feedback en langage naturel interprété par un LLM (étape 7b), avec la contrainte de rester gratuit (modèle dans le navigateur ou LLM local en priorité).
 
 - **2026-11-14** — Réorganisation : tout le projet est Drifton ; la page d'accueil donne accès aux 4 parties au même niveau (le player d'origine passe dans `player/`, le dossier `lab/` disparaît).
 
