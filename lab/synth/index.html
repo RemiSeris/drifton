@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0a0f">
+<title>Drifton Synth</title>
+<link rel="stylesheet" href="../lab.css">
+<link rel="stylesheet" href="synth.css">
+</head>
+<body>
+<main class="lab wide">
+  <header>
+    <a href="../" class="back">← Lab</a>
+    <h1>Synth</h1>
+    <p class="intro">
+      Steps 1–2 · two oscillators with unison, noise, a filter, two envelopes, and two LFOs
+      you can plug into the sound through the modulation matrix.
+      Play with the middle row of your computer keyboard (black keys on the row above),
+      or click the keys. Z / X shift the octave (W / X on AZERTY).
+      Each instrument keeps its own sound: with Hold on, leave a chord ringing on one
+      and play another over it.
+    </p>
+  </header>
+
+  <section>
+    <div class="row instrument-row"><span>Instrument</span><div class="seg tabs" id="instruments"></div></div>
+    <div class="viz">
+      <div><div class="viz-label">Waveform</div><canvas id="scope"></canvas></div>
+      <div><div class="viz-label">Spectrum</div><canvas id="spectrum"></canvas></div>
+    </div>
+    <div class="kb" id="keyboard"></div>
+    <div class="kb-bar">
+      <div class="seg">
+        <button type="button" id="oct-down" aria-label="Octave down">−</button>
+        <span class="oct" id="oct-label"></span>
+        <button type="button" id="oct-up" aria-label="Octave up">+</button>
+      </div>
+      <label class="row check"><input type="checkbox" id="hold"><span>Hold</span></label>
+      <div class="seg">
+        <button type="button" id="panic">All notes off</button>
+        <button type="button" id="reset">Reset sound</button>
+      </div>
+    </div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <div class="grid" id="controls"></div>
+</main>
+<script src="util.js"></script>
+<script src="params.js"></script>
+<script src="envelope.js"></script>
+<script src="lfo.js"></script>
+<script src="osc.js"></script>
+<script src="voice.js"></script>
+<script src="synth.js"></script>
+<script src="patches.js"></script>
+<script src="keyboard.js"></script>
+<script src="scope.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

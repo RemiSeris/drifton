@@ -1,0 +1,98 @@
+/* Synth page: extends ../lab.css */
+
+.lab.wide { max-width: 1040px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.row output { width: 4.5rem; }
+.seg { flex-wrap: wrap; }
+.row .seg { flex: 1; }
+
+/* Visualisations */
+.viz { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.viz-label { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.3rem; }
+canvas.env-shape { height: 64px; }
+
+/* On-screen keyboard */
+.kb {
+  position: relative;
+  height: 130px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+.key {
+  position: absolute;
+  top: 0;
+  border-radius: 0 0 6px 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 6px;
+  gap: 2px;
+  font-size: 0.7rem;
+  transition: background 0.08s ease;
+}
+.key.white {
+  height: 100%;
+  background: #d9d6e6;
+  color: #4a4760;
+  border: 1px solid var(--bg);
+}
+.key.black {
+  height: 60%;
+  background: #1c1a28;
+  color: var(--muted);
+  z-index: 2;
+  border: 1px solid var(--bg);
+}
+.key.white.on { background: var(--accent); color: var(--bg); }
+.key.black.on { background: var(--accent); color: var(--bg); }
+.key-letter { font-weight: 600; }
+.key-name { font-size: 0.62rem; opacity: 0.7; }
+
+.kb-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+}
+.kb-bar .seg { align-items: center; }
+.oct { min-width: 2.5rem; text-align: center; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 560px) {
+  .viz { grid-template-columns: 1fr; }
+  .key-letter { display: none; }
+}
+
+/* LFO trace and modulation matrix */
+canvas.lfo-trace { height: 56px; }
+.mod-row {
+  display: grid;
+  grid-template-columns: 1.2rem 1fr 1.4fr;
+  gap: 0.4rem 0.6rem;
+  align-items: center;
+}
+.mod-row .row { gap: 0.6rem; }
+.mod-row .row:last-child { grid-column: 2 / 4; }
+.mod-row select { width: 100%; min-width: 0; }
+.mod-num { color: var(--muted); font-size: 0.8rem; grid-row: span 2; }
+
+/* Instrument tabs; a dot shows instruments that are currently sounding */
+.instrument-row .seg button { position: relative; }
+.seg button.sounding::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
