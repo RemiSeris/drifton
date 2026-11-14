@@ -107,11 +107,42 @@ Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `ind
 - [ ] Textures et samples personnels (export Ableton) en couche granulaire.
 - [ ] Vrai modèle de préférences, éventuellement serveur pour agréger plusieurs utilisateurs.
 
+## Autres axes (apprentissage musical)
+
+Pistes à côté de la musique fonctionnelle, qui réutilisent les mêmes briques (synthé pour
+le son, `generator/harmony.js` pour la théorie des accords). Chacune serait une case de
+la page d'accueil.
+
+### Accords piano / guitare (`chords/`)
+- **Explorer** : choisir une fondamentale et un type d'accord (majeur, mineur, 7, maj7, m7,
+  sus2, sus4, dim, aug, 9…), le voir sur un clavier et sur un manche de guitare (positions /
+  doigtés), l'entendre (plaqué ou arpégé), voir le nom des notes et les intervalles.
+- **S'entraîner** :
+  - *jouer l'accord demandé* : on clique les notes, ou on les joue sur un vrai clavier
+    branché en USB (Web MIDI API), et on vérifie ;
+  - *reconnaître à l'oreille* : l'accord est joué, on devine son type (quiz, score,
+    difficulté progressive : d'abord majeur / mineur, puis septièmes, renversements…) ;
+  - *reconnaître sur le clavier ou le manche* : une position s'affiche, on donne son nom.
+- Guitare : accordage standard d'abord, une base de doigtés courants + calcul des
+  positions possibles.
+
+### Lecteur de partition MIDI (`score/`)
+- Charger un fichier `.mid` (glisser-déposer), le lire avec le synthé.
+- **Vue piano** : notes qui tombent vers un clavier, en couleurs par main / piste ;
+  tempo réglable, boucle sur un passage, mode « attendre que je joue la bonne note »
+  (avec un clavier branché en Web MIDI).
+- **Vue guitare** : notes placées sur le manche / tablature qui défile.
+- À écrire nous-mêmes (zéro dépendance) : un petit lecteur de fichiers MIDI (format simple :
+  en-tête, pistes, événements note on / note off, tempo).
+- Design original (pas de copie d'un logiciel existant).
+
 ## En ligne
 
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`.
 
 ## Journal
+
+- **2026-11-14** — Deux nouveaux axes notés : entraînement aux accords piano / guitare, et lecteur de partition MIDI qui défile (piano et guitare). La roadmap reste publique pour l'instant.
 
 - **2026-11-14** — Étape 4 : les sons réglés sur le synthé sont enregistrés et joués par le générateur.
 
