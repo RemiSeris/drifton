@@ -28,3 +28,6 @@ canvas#roll { height: 220px; }
 .role .name { width: 5.5rem; flex: none; display: flex; align-items: center; gap: 0.5rem; color: var(--fg); }
 .role .dot { width: 10px; height: 10px; border-radius: 3px; background: var(--c); flex: none; }
 .role input[type=range] { flex: 1; }
+
+.role .edit { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+.role .edit:hover { text-decoration: underline; }

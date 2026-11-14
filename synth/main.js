@@ -9,7 +9,7 @@ const ctx = new AudioContext();
 const master = new MasterBus(ctx);
 const instruments = Object.keys(STARTER_PATCHES).map((name) => ({
   name,
-  synth: new Synth(ctx, makePatch(name), master.input),
+  synth: new Synth(ctx, currentPatch(name), master.input),
 }));
 let current = instruments[0];
 
@@ -158,11 +158,33 @@ function setValue(key, value) {
   current.synth.set(key, value);
   refresh(key);
   if (/^(amp|fenv)\./.test(key)) drawEnvelopes();
+  scheduleSave(current);
 }
 
+// Back to the starter sound, and forget the saved one.
 function resetPatch() {
   current.synth.loadPatch(makePatch(current.name));
+  PatchStore.remove(current.name);
   refreshAll();
+  updatePatchState();
+}
+
+// ---- Saving ----
+
+// Every change is saved automatically, a moment after the last slider movement
+// (no need to write to storage 60 times a second while dragging).
+let saveTimer = null;
+function scheduleSave(inst) {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    PatchStore.set(inst.name, { ...inst.synth.params });
+    updatePatchState();
+  }, 300);
+}
+
+function updatePatchState(message) {
+  const edited = !isStarterPatch(current.name, current.synth.params);
+  $("patch-state").textContent = message || (edited ? "Edited · saved" : "Starter sound");
 }
 
 buildControls($("controls"));
@@ -185,6 +207,11 @@ function selectInstrument(inst) {
   for (const i of instruments) i.tab.classList.toggle("active", i === inst);
   for (const t of lfoTraces) t.values = [];
   refreshAll();
+  updatePatchState();
+  // Keep the selected instrument in the address (#Bells), without adding history steps.
+  try {
+    history.replaceState(null, "", location.pathname + location.search + "#" + inst.name);
+  } catch {}
 }
 
 // ---- Animation: LFO traces and "playing" dots on the tabs ----
@@ -214,6 +241,44 @@ $("panic").addEventListener("click", () => {
 });
 $("reset").addEventListener("click", resetPatch);
 
+// ---- Export / import a sound as a JSON file ----
+
+$("export").addEventListener("click", () => {
+  const data = { drifton: "patch", version: 1, instrument: current.name, params: current.synth.params };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `drifton-${current.name.toLowerCase()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+$("import").addEventListener("click", () => $("import-file").click());
+$("import-file").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = ""; // allow importing the same file again
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const patch = sanitizePatch(data.params || data, current.synth.params);
+    current.synth.loadPatch(patch);
+    PatchStore.set(current.name, { ...patch });
+    refreshAll();
+    updatePatchState(`Imported ${file.name}`);
+  } catch {
+    updatePatchState("This file is not a Drifton sound.");
+  }
+});
+
+// Another tab changed the saved sounds (e.g. the same page open twice): follow it.
+PatchStore.onChange(() => {
+  for (const inst of instruments) inst.synth.loadPatch(currentPatch(inst.name));
+  refreshAll();
+  updatePatchState();
+});
+
 new Scope(master.analyser, $("scope"), $("spectrum"));
-selectInstrument(current);
+// "synth/index.html#Bells" opens on the Bells instrument (used by the generator's Edit links).
+const fromHash = instruments.find((i) => i.name === decodeURIComponent(location.hash.slice(1)));
+selectInstrument(fromHash || current);
 requestAnimationFrame(animate);

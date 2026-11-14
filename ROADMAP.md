@@ -73,6 +73,7 @@ Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `ind
 | `osc.js` | couche d'oscillateur avec unisson (désaccord + stéréo, phase aléatoire) |
 | `voice.js` | une note : 2 oscillateurs + bruit → filtre → ampli → trémolo → pan, 2 enveloppes, branchements de la matrice de modulation |
 | `synth.js` | `Synth` = un instrument (patch, 8 voix, LFO, volume), instanciable plusieurs fois ; notes jouables maintenant ou programmées à un temps `t` ; `MasterBus` commun (limiteur, analyseur) ; buffers de bruit |
+| `storage.js` | sauvegarde des sons dans le navigateur, partagée entre les pages ; nettoyage des valeurs importées |
 | `patches.js` | sons de départ des 4 instruments (Pad, Bass, Bells, Texture), en différences par rapport aux défauts |
 | `keyboard.js` | clavier d'ordinateur (disposition Ableton, positions physiques) + clavier à l'écran, mode Hold |
 | `scope.js` | oscilloscope, spectre, dessin des enveloppes |
@@ -84,7 +85,7 @@ Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `ind
 - [x] **1. La voix** : 2 oscillateurs (sinus, triangle, dent de scie, carré) avec unisson, filtre (LP/HP/BP/notch, résonance), enveloppe de filtre, enveloppe d'ampli, polyphonie, clavier, oscilloscope et spectre.
 - [x] **2. La modulation** : 2 LFO (sinus, tri, scie, carré, Drift, S&H), matrice de 4 slots (cutoff, pitch, detune d'unisson, volume, pan), source de bruit (blanc, rose, brun). Synth instanciable plusieurs fois + notes programmées dans le temps (prépare la génération).
 - [ ] **3. Les effets**, un fichier chacun : saturation (WaveShaper), chorus (delay court modulé), delay (avec feedback), réverbe (convolution puis réseau de delays type Freeverb). Éventuellement phaser.
-- [ ] **4. Les patchs** : sauvegarder / charger / exporter en JSON, quelques patchs de départ.
+- [x] **4. Les patchs** : sauvegarde automatique de chaque instrument dans le navigateur (`localStorage`, `synth/storage.js`), lue par le générateur au démarrage et en direct si la page synthé est ouverte dans un autre onglet (événement `storage`) ; Reset = retour au son de départ ; export / import d'un son en fichier JSON (valeurs nettoyées et bornées) ; boutons « Edit » dans le générateur qui ouvrent l'instrument sur la page synthé (`synth/index.html#Bells`).
 
 ### Musique
 - [x] **5. Générateur** (première version) : plusieurs instruments (`Synth`) en parallèle, chacun avec un rôle (nappe, basse, cloches/notes éparses, texture). Un état harmonique commun (gamme, accord courant, enchaînements par chaîne de Markov) ; chaque rôle choisit ses notes dedans selon ses règles (densité, registre, probabilité) ; un ordonnanceur à anticipation programme les `noteOn/noteOff` à des temps précis.
@@ -112,10 +113,12 @@ GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifto
 
 ## Journal
 
+- **2026-11-14** — Étape 4 : les sons réglés sur le synthé sont enregistrés et joués par le générateur.
+
 - **2026-11-14** — Idée ajoutée : feedback en langage naturel interprété par un LLM (étape 7b), avec la contrainte de rester gratuit (modèle dans le navigateur ou LLM local en priorité).
 
 - **2026-11-14** — Réorganisation : tout le projet est Drifton ; la page d'accueil donne accès aux 4 parties au même niveau (le player d'origine passe dans `player/`, le dossier `lab/` disparaît).
 
 - **2026-11-14** — Prototype `lab/` (nappe en 3 états). Discussion de direction → choix du synthé maison + générateur + apprentissage par feedback. Étapes 1 et 2 du synthé faites (voix, puis LFO / bruit / matrice de modulation, multi-instances), onglets pour 4 instruments, puis première version du générateur (étape 5).
 
-Idées notées pour le générateur : les patchs ne sont pas encore partagés entre la page synthé et la page générateur (viendra avec l'étape 4) ; pas encore d'effets, donc le rendu est sec ; le conducteur (étape 6) fera varier densité, longueur d'accords, brillance, mode au fil de la session.
+Idées notées pour le générateur : pas encore d'effets, donc le rendu est sec ; le conducteur (étape 6) fera varier densité, longueur d'accords, brillance, mode au fil de la session.

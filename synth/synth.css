@@ -96,3 +96,6 @@ canvas.lfo-trace { height: 56px; }
   border-radius: 50%;
   background: var(--accent);
 }
+
+.patch-state { color: var(--muted); font-size: 0.8rem; margin-left: auto; }
+.instrument-row { flex-wrap: wrap; }

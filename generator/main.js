@@ -12,10 +12,20 @@ const ROLES = [
   { id: "texture", name: "Texture", patch: "Texture", volume: 0.35 },
 ];
 
+// Each instrument uses the sound saved on the synth page (or its starter sound).
+// The volume is the generator's own mix, not part of the sound.
 const synths = {};
 for (const r of ROLES) {
-  synths[r.id] = new Synth(ctx, { ...makePatch(r.patch), volume: r.volume }, master.input);
+  synths[r.id] = new Synth(ctx, { ...currentPatch(r.patch), volume: r.volume }, master.input);
 }
+
+// The synth page is open in another tab and a sound changed: apply it right away.
+PatchStore.onChange(() => {
+  for (const r of ROLES) {
+    const s = synths[r.id];
+    s.loadPatch({ ...currentPatch(r.patch), volume: s.params.volume });
+  }
+});
 
 const harmony = new Harmony(2, "dorian"); // D dorian
 const gen = new Generator(ctx, synths, harmony);
@@ -68,7 +78,8 @@ for (const r of ROLES) {
   row.style.setProperty("--c", colors[r.id]);
   row.innerHTML = `
     <label class="name"><input type="checkbox" checked><span class="dot"></span>${r.name}</label>
-    <input type="range" min="0" max="100" value="${Math.round(r.volume * 100)}" aria-label="${r.name} volume">`;
+    <input type="range" min="0" max="100" value="${Math.round(r.volume * 100)}" aria-label="${r.name} volume">
+    <a class="edit" href="../synth/index.html#${r.patch}" target="_blank" rel="noopener">Edit</a>`;
   const [check, slider] = row.querySelectorAll("input");
   check.addEventListener("change", () => gen.setRole(r.id, check.checked));
   slider.addEventListener("input", () => synths[r.id].set("volume", slider.value / 100));
