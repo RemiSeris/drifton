@@ -58,6 +58,7 @@ valeur de ces paramètres au moment du clic.
 | `index.html`, `engine.js`, `presets.js`, `ui.js`, `styles.css` | v1 en ligne : drone génératif simple, presets Focus / Relax / Deep |
 | `lab/` | prototype « nappe en 3 états » : crossfade d'exports audio piloté par un conducteur, couche granulaire, modulation d'amplitude. Exploration, a mené aux décisions ci-dessus |
 | `lab/synth/` | synthé maison, construit brique par brique (voir étapes) |
+| `lab/generator/` | générateur : 4 instruments du synthé joués par des règles. `harmony.js` (modes, accords par empilement de tierces, chaîne de Markov, voice leading), `generator.js` (rôles pad / basse / cloches / texture, ordonnanceur à anticipation), `main.js` (page, piano roll). Réutilise les fichiers de `lab/synth/` |
 
 Organisation de `lab/synth/` (un fichier = une brique, ordre de chargement dans `index.html`) :
 
@@ -84,7 +85,7 @@ Organisation de `lab/synth/` (un fichier = une brique, ordre de chargement dans 
 - [ ] **4. Les patchs** : sauvegarder / charger / exporter en JSON, quelques patchs de départ.
 
 ### Musique
-- [ ] **5. Générateur** : plusieurs instruments (`Synth`) en parallèle, chacun avec un rôle (nappe, basse, cloches/notes éparses, texture). Un état harmonique commun (gamme, accord courant, enchaînements par chaîne de Markov) ; chaque rôle choisit ses notes dedans selon ses règles (densité, registre, probabilité) ; un ordonnanceur à anticipation programme les `noteOn/noteOff` à des temps précis.
+- [x] **5. Générateur** (première version) : plusieurs instruments (`Synth`) en parallèle, chacun avec un rôle (nappe, basse, cloches/notes éparses, texture). Un état harmonique commun (gamme, accord courant, enchaînements par chaîne de Markov) ; chaque rôle choisit ses notes dedans selon ses règles (densité, registre, probabilité) ; un ordonnanceur à anticipation programme les `noteOn/noteOff` à des temps précis.
 - [ ] **6. Conducteur** : dérive lente de tous les paramètres, arc de session, modulation d'amplitude (reprendre les idées de `lab/`).
 
 ### Adaptation
@@ -100,8 +101,10 @@ Organisation de `lab/synth/` (un fichier = une brique, ordre de chargement dans 
 
 ## En ligne
 
-GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ — le lab est sur `/lab/`, le synthé sur `/lab/synth/`.
+GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ — le lab est sur `/lab/`, le synthé sur `/lab/synth/`, le générateur sur `/lab/generator/`.
 
 ## Journal
 
-- **2026-11-14** — Prototype `lab/` (nappe en 3 états). Discussion de direction → choix du synthé maison + générateur + apprentissage par feedback. Étapes 1 et 2 du synthé faites (voix, puis LFO / bruit / matrice de modulation, multi-instances).
+- **2026-11-14** — Prototype `lab/` (nappe en 3 états). Discussion de direction → choix du synthé maison + générateur + apprentissage par feedback. Étapes 1 et 2 du synthé faites (voix, puis LFO / bruit / matrice de modulation, multi-instances), onglets pour 4 instruments, puis première version du générateur (étape 5).
+
+Idées notées pour le générateur : les patchs ne sont pas encore partagés entre la page synthé et la page générateur (viendra avec l'étape 4) ; pas encore d'effets, donc le rendu est sec ; le conducteur (étape 6) fera varier densité, longueur d'accords, brillance, mode au fil de la session.

@@ -1,0 +1,30 @@
+/* Generator page: extends ../lab.css */
+
+:root {
+  --c-pad: #8a7fff;
+  --c-bass: #4fb8a8;
+  --c-bells: #f2c46d;
+  --c-texture: #d07fb0;
+}
+
+.chord { font-size: 1.6rem; font-weight: 500; letter-spacing: 0.02em; }
+.chord small { font-size: 0.9rem; color: var(--muted); margin-left: 0.4rem; }
+
+canvas#roll { height: 220px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.8rem; color: var(--muted); }
+.legend span::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 0.4rem;
+  vertical-align: -1px;
+  background: var(--c);
+}
+
+.role { display: flex; align-items: center; gap: 0.9rem; font-size: 0.9rem; color: var(--muted); margin-bottom: 0.85rem; }
+.role .name { width: 5.5rem; flex: none; display: flex; align-items: center; gap: 0.5rem; color: var(--fg); }
+.role .dot { width: 10px; height: 10px; border-radius: 3px; background: var(--c); flex: none; }
+.role input[type=range] { flex: 1; }

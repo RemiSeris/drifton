@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0a0f">
+<title>Drifton Generator</title>
+<link rel="stylesheet" href="../lab.css">
+<link rel="stylesheet" href="gen.css">
+</head>
+<body>
+<main class="lab">
+  <header>
+    <a href="../" class="back">← Lab</a> · <a href="../synth/" class="back">Synth</a>
+    <h1>Generator</h1>
+    <p class="intro">
+      Step 5 · four instruments from the synth, played by rules: a pad holding the
+      chords, a bass on the roots, sparse bells wandering on the scale, and a texture.
+      Chords change by weighted chance and are voice-led so the changes stay smooth.
+    </p>
+  </header>
+
+  <section class="transport">
+    <button class="play" id="play" aria-label="Play / Stop">
+      <svg viewBox="0 0 24 24"><path id="play-icon" d="M8 5v14l11-7z"/></svg>
+    </button>
+    <div class="transport-side">
+      <div class="chord" id="chord">—</div>
+      <div class="status" id="status">Press play.</div>
+      <label class="row"><span>Volume</span><input type="range" id="volume" min="0" max="100" value="80"></label>
+    </div>
+  </section>
+
+  <section>
+    <canvas id="roll"></canvas>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section>
+    <h2>Harmony</h2>
+    <label class="row"><span>Key</span><select id="key"></select></label>
+    <label class="row"><span>Mode</span>
+      <select id="mode">
+        <option value="lydian">Lydian · floating</option>
+        <option value="ionian">Ionian · major</option>
+        <option value="mixolydian">Mixolydian · warm</option>
+        <option value="dorian" selected>Dorian · soft minor</option>
+        <option value="aeolian">Aeolian · melancholic</option>
+        <option value="phrygian">Phrygian · dark</option>
+      </select>
+    </label>
+    <label class="row"><span>Chord length</span><input type="range" id="chord-len" min="6" max="60" value="20"><output id="chord-len-out"></output></label>
+    <p class="help">Key and mode changes apply from the next chord.</p>
+  </section>
+
+  <section>
+    <h2>Instruments</h2>
+    <div id="roles"></div>
+    <label class="row"><span>Bell density</span><input type="range" id="density" min="0" max="100" value="35"><output id="density-out"></output></label>
+    <p class="help">The sounds are the synth's starter patches. Editing them here will come with patch saving (step 4).</p>
+  </section>
+</main>
+<script src="../synth/util.js"></script>
+<script src="../synth/params.js"></script>
+<script src="../synth/envelope.js"></script>
+<script src="../synth/lfo.js"></script>
+<script src="../synth/osc.js"></script>
+<script src="../synth/voice.js"></script>
+<script src="../synth/synth.js"></script>
+<script src="../synth/patches.js"></script>
+<script src="../synth/scope.js"></script>
+<script src="harmony.js"></script>
+<script src="generator.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
