@@ -174,3 +174,6 @@ input[type=range]::-moz-range-thumb {
   color: var(--muted);
   z-index: 1;
 }
+
+.hint a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.hint a:hover { color: var(--fg); }

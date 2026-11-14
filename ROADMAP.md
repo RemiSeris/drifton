@@ -56,7 +56,8 @@ valeur de ces paramètres au moment du clic.
 | Chemin | Contenu |
 |---|---|
 | `index.html`, `engine.js`, `presets.js`, `ui.js`, `styles.css` | v1 en ligne : drone génératif simple, presets Focus / Relax / Deep |
-| `lab/` | prototype « nappe en 3 états » : crossfade d'exports audio piloté par un conducteur, couche granulaire, modulation d'amplitude. Exploration, a mené aux décisions ci-dessus |
+| `lab/index.html` | page d'accueil du lab : accès à toutes les parties (lien « Lab » en bas de la page principale) |
+| `lab/pads/` | prototype « nappe en 3 états » : crossfade d'exports audio piloté par un conducteur, couche granulaire, modulation d'amplitude. Exploration, a mené aux décisions ci-dessus |
 | `lab/synth/` | synthé maison, construit brique par brique (voir étapes) |
 | `lab/generator/` | générateur : 4 instruments du synthé joués par des règles. `harmony.js` (modes, accords par empilement de tierces, chaîne de Markov, voice leading), `generator.js` (rôles pad / basse / cloches / texture, ordonnanceur à anticipation), `main.js` (page, piano roll). Réutilise les fichiers de `lab/synth/` |
 
@@ -101,7 +102,7 @@ Organisation de `lab/synth/` (un fichier = une brique, ordre de chargement dans 
 
 ## En ligne
 
-GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ — le lab est sur `/lab/`, le synthé sur `/lab/synth/`, le générateur sur `/lab/generator/`.
+GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ — le lab est sur `/lab/` (page d'accueil), le prototype de nappes sur `/lab/pads/`, le synthé sur `/lab/synth/`, le générateur sur `/lab/generator/`.
 
 ## Journal
 

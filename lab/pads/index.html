@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0a0f">
+<title>Drifton Pad States</title>
+<link rel="stylesheet" href="../lab.css">
+</head>
+<body>
+<main class="lab">
+  <header>
+    <a href="../" class="back">← Lab</a>
+    <h1>Pad states</h1>
+    <p class="intro">
+      Prototype: one pad exported in three states, crossfaded by a conductor,
+      plus a granular layer and amplitude modulation. Drop your own audio files
+      on the slots to replace the placeholder sounds.
+    </p>
+  </header>
+
+  <section class="transport">
+    <button class="play" id="play" aria-label="Play / Pause" disabled>
+      <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <div class="transport-side">
+      <div class="status" id="status">Rendering placeholder sounds…</div>
+      <label class="row"><span>Volume</span><input type="range" id="volume" min="0" max="100" value="70"></label>
+    </div>
+  </section>
+
+  <section>
+    <h2>1 · Pad in three states</h2>
+    <p class="help">
+      Same sound, same key, exported at three positions of a macro
+      (filter / wavetable / FX closed → open). Different lengths are fine and
+      even better: the loops never line up the same way twice.
+    </p>
+    <div class="slots" id="slots"></div>
+  </section>
+
+  <section>
+    <h2>2 · Conductor</h2>
+    <div class="seg" id="mode">
+      <button data-mode="manual" class="active">Manual</button>
+      <button data-mode="session">Session</button>
+    </div>
+    <label class="row" id="manual-row">
+      <span>Intensity</span>
+      <input type="range" id="intensity" min="0" max="100" value="30">
+    </label>
+    <label class="row hidden" id="session-row">
+      <span>Length</span>
+      <select id="session-len">
+        <option value="3">Demo · 3 min</option>
+        <option value="35">Focus · 35 min (5 / 25 / 5)</option>
+      </select>
+    </label>
+    <canvas id="curve"></canvas>
+    <div class="readout" id="readout"></div>
+  </section>
+
+  <section>
+    <h2>3 · Granular layer</h2>
+    <p class="help">Small fragments read from one of the states, slowly drifting through the file.</p>
+    <label class="row"><span>Source</span>
+      <select id="g-source">
+        <option value="0">Dark</option>
+        <option value="1" selected>Mid</option>
+        <option value="2">Bright</option>
+      </select>
+    </label>
+    <label class="row"><span>Mix</span><input type="range" id="g-mix" min="0" max="100" value="35"></label>
+    <label class="row"><span>Grain size</span><input type="range" id="g-size" min="40" max="600" value="220"></label>
+    <label class="row"><span>Spread</span><input type="range" id="g-spread" min="0" max="30" value="4"></label>
+    <label class="row"><span>Drift speed</span><input type="range" id="g-speed" min="0" max="50" value="8"></label>
+    <label class="row check"><input type="checkbox" id="g-oct" checked><span>Octave scatter (some grains ±12 semitones)</span></label>
+  </section>
+
+  <section>
+    <h2>4 · Amplitude modulation</h2>
+    <p class="help">Brain.fm-style: a fast, subtle volume pulse. Around 16 Hz for focus, slower for relaxation.</p>
+    <label class="row check"><input type="checkbox" id="am-on"><span>Enabled</span></label>
+    <label class="row"><span>Rate</span><input type="range" id="am-rate" min="2" max="20" value="16"><output id="am-rate-out"></output></label>
+    <label class="row"><span>Depth</span><input type="range" id="am-depth" min="0" max="60" value="20"><output id="am-depth-out"></output></label>
+  </section>
+</main>
+<script src="lab.js"></script>
+</body>
+</html>

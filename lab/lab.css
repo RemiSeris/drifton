@@ -166,3 +166,30 @@ canvas { width: 100%; height: 120px; border-radius: 10px; background: var(--bg);
   .slots { grid-template-columns: 1fr; }
   .row > span:first-child { width: 5.5rem; }
 }
+
+/* Lab home: cards linking to each part */
+.hub { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+.card {
+  background: var(--card);
+  border: 1px solid transparent;
+  border-radius: 18px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--fg);
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.card:hover, .card:focus-visible { border-color: var(--accent); background: var(--card-active); }
+.card.featured { grid-column: 1 / -1; border-color: var(--card-active); }
+.card h2 { font-size: 1.15rem; }
+.card p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.5; flex: 1; }
+.card .tag { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.card .go { font-size: 0.85rem; color: var(--accent); }
+.next { margin: 0; padding-left: 1.2rem; color: var(--muted); font-size: 0.9rem; line-height: 1.8; }
+.next b { color: var(--fg); font-weight: 500; }
+
+@media (max-width: 560px) {
+  .hub { grid-template-columns: 1fr; }
+}
