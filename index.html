@@ -8,50 +8,157 @@
 <link rel="stylesheet" href="common.css">
 </head>
 <body>
-<main class="lab">
+<main class="lab home">
   <header>
     <h1>Drifton</h1>
-    <p class="intro">
-      Generative functional music in the browser, to focus or relax.
-    </p>
+    <p class="intro">Small sound tools that run in your browser: listen, play, learn, make.</p>
   </header>
 
-  <nav class="hub">
-    <a class="card" href="generator/index.html">
-      <h2>Generator</h2>
-      <p>Press play and let it run: endless music composed live.</p>
-      <span class="go">Open →</span>
-    </a>
+  <!-- Each illustration is a small inline SVG: flat shapes, rounded ends, the site's palette. -->
 
-    <a class="card" href="synth/index.html">
-      <h2>Synth</h2>
-      <p>Play and shape the instruments the generator uses.</p>
-      <span class="go">Open →</span>
-    </a>
+  <div class="tool-group">
+    <h2 class="group-title">Listen</h2>
+    <nav class="tools">
+      <a class="card" href="generator/index.html">
+        <div class="art">
+          <svg viewBox="0 0 240 120" aria-hidden="true">
+            <circle cx="40" cy="26" r="1.6" fill="#e8e6f0" opacity=".5"/>
+            <circle cx="92" cy="18" r="1.2" fill="#e8e6f0" opacity=".4"/>
+            <circle cx="214" cy="30" r="1.4" fill="#e8e6f0" opacity=".5"/>
+            <circle cx="172" cy="50" r="18" fill="#f2b56d"/>
+            <path d="M0 80 C40 60 80 60 120 78 S200 96 240 70 V120 H0Z" fill="#5c2a8c"/>
+            <path d="M0 92 C50 74 90 80 130 92 S210 104 240 86 V120 H0Z" fill="#8a7fff"/>
+            <path d="M0 106 C40 96 100 98 140 106 S210 114 240 102 V120 H0Z" fill="#c4bdff"/>
+          </svg>
+        </div>
+        <h2>Focus music</h2>
+        <p>Endless music composed live, to focus or relax.</p>
+      </a>
 
-    <a class="card" href="player/index.html">
-      <h2>Drone player</h2>
-      <p>A simple generative drone to focus or relax.</p>
-      <span class="go">Open →</span>
-    </a>
+      <a class="card" href="player/index.html">
+        <div class="art">
+          <svg viewBox="0 0 240 120" aria-hidden="true">
+            <path d="M16 60 Q42 34 68 60 T120 60 T172 60 T224 60" fill="none" stroke="#5ec4f2" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+            <circle cx="120" cy="60" r="42" fill="none" stroke="#5c2a8c" stroke-width="7"/>
+            <circle cx="120" cy="60" r="28" fill="none" stroke="#8a7fff" stroke-width="7"/>
+            <circle cx="120" cy="60" r="13" fill="#c4bdff"/>
+          </svg>
+        </div>
+        <h2>Drone</h2>
+        <p>A simple generative drone, one tap to start.</p>
+      </a>
+    </nav>
+  </div>
 
-    <a class="card" href="pads/index.html">
-      <h2>Pad states</h2>
-      <p>Crossfade your own audio files with a conductor and a granular layer.</p>
-      <span class="go">Open →</span>
-    </a>
-  </nav>
+  <div class="tool-group">
+    <h2 class="group-title">Play &amp; learn</h2>
+    <nav class="tools">
+      <a class="card" href="score/index.html">
+        <div class="art">
+          <svg viewBox="0 0 240 120" aria-hidden="true">
+            <!-- falling notes -->
+            <rect x="50" y="18" width="16" height="34" rx="5" fill="#8a7fff"/>
+            <rect x="104" y="40" width="16" height="44" rx="5" fill="#5c2a8c"/>
+            <rect x="140" y="8" width="16" height="30" rx="5" fill="#8a7fff"/>
+            <rect x="176" y="52" width="16" height="32" rx="5" fill="#8a7fff"/>
+            <ellipse cx="112" cy="84" rx="20" ry="7" fill="#8e5fc0" opacity=".45"/>
+            <ellipse cx="184" cy="84" rx="20" ry="7" fill="#8a7fff" opacity=".45"/>
+            <!-- keyboard -->
+            <rect x="30" y="84" width="180" height="28" rx="6" fill="#e8e6f0"/>
+            <rect x="102" y="84" width="18" height="28" fill="#8e5fc0"/>
+            <rect x="174" y="84" width="18" height="28" fill="#b3abff"/>
+            <g stroke="#0a0a0f" stroke-width="1.5" opacity=".35">
+              <path d="M48 84v28M66 84v28M84 84v28M102 84v28M120 84v28M138 84v28M156 84v28M174 84v28M192 84v28"/>
+            </g>
+            <g fill="#1b1a26">
+              <rect x="43" y="84" width="10" height="16" rx="2"/><rect x="61" y="84" width="10" height="16" rx="2"/>
+              <rect x="97" y="84" width="10" height="16" rx="2"/><rect x="115" y="84" width="10" height="16" rx="2"/>
+              <rect x="133" y="84" width="10" height="16" rx="2"/><rect x="169" y="84" width="10" height="16" rx="2"/>
+              <rect x="187" y="84" width="10" height="16" rx="2"/>
+            </g>
+          </svg>
+        </div>
+        <h2>Piano score</h2>
+        <p>Practice from a MIDI file: slow it down, loop a passage.</p>
+      </a>
 
-  <section>
-    <h2>Coming next</h2>
-    <ol class="next">
-      <li><b>Effects</b>: saturation, chorus, delay, reverb.</li>
-      <li><b>Patches</b>: save and share sounds between the synth and the generator.</li>
-      <li><b>Conductor</b>: the music slowly evolves on its own over a session.</li>
-      <li><b>Feedback</b>: 👍 / 👎 to teach it what you like.</li>
-    </ol>
-    <a class="back" href="https://github.com/RooXam/drifton/blob/main/ROADMAP.md">Full roadmap →</a>
-  </section>
+      <div class="card soon">
+        <div class="art">
+          <svg viewBox="0 0 240 120" aria-hidden="true">
+            <rect x="24" y="28" width="192" height="64" rx="10" fill="#2a2640"/>
+            <g stroke="#8a879c" stroke-width="4" stroke-linecap="round">
+              <path d="M76 32v56M128 32v56M180 32v56"/>
+            </g>
+            <g stroke="#6b6880" stroke-width="1.6">
+              <path d="M24 38h192M24 49h192M24 60h192M24 71h192M24 82h192"/>
+            </g>
+            <circle cx="102" cy="49" r="7" fill="#f2b56d"/>
+            <circle cx="154" cy="60" r="7" fill="#5ec4f2"/>
+            <circle cx="154" cy="71" r="7" fill="#8a7fff"/>
+            <circle cx="50" cy="82" r="7" fill="#7fdcc8"/>
+          </svg>
+        </div>
+        <h2>Chords <span class="tag">Soon</span></h2>
+        <p>Learn and recognise chords on piano and guitar.</p>
+      </div>
+    </nav>
+  </div>
+
+  <div class="group-row">
+  <div class="tool-group">
+    <h2 class="group-title">Make</h2>
+    <nav class="tools">
+      <a class="card" href="synth/index.html">
+        <div class="art">
+          <svg viewBox="0 0 240 120" aria-hidden="true">
+            <g fill="#2a2640">
+              <circle cx="66" cy="46" r="20"/><circle cx="120" cy="46" r="20"/><circle cx="174" cy="46" r="20"/>
+            </g>
+            <g fill="none" stroke-width="5" stroke-linecap="round">
+              <path d="M52 60 A20 20 0 1 1 80 32" stroke="#8a7fff"/>
+              <path d="M106 60 A20 20 0 0 1 120 26" stroke="#5ec4f2"/>
+              <path d="M160 60 A20 20 0 1 1 188 60" stroke="#f2b56d"/>
+            </g>
+            <g stroke="#e8e6f0" stroke-width="3.5" stroke-linecap="round">
+              <path d="M66 46l9-9M120 46v-12M174 46l9 9"/>
+            </g>
+            <path d="M40 100 L72 82 V100 L104 82 V100 L136 82 V100 L168 82 V100 L200 82" fill="none" stroke="#c4bdff" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h2>Synth</h2>
+        <p>Play and shape the sounds Drifton uses.</p>
+      </a>
+    </nav>
+  </div>
+
+  <div class="tool-group">
+    <h2 class="group-title">Lab · experiments</h2>
+    <nav class="tools">
+      <a class="card" href="pads/index.html">
+        <div class="art">
+          <svg viewBox="0 0 240 120" aria-hidden="true">
+            <g style="mix-blend-mode: screen" opacity=".85">
+              <circle cx="100" cy="70" r="30" fill="#8a7fff"/>
+              <circle cx="140" cy="70" r="30" fill="#5ec4f2"/>
+              <circle cx="120" cy="42" r="30" fill="#5c2a8c"/>
+            </g>
+            <g fill="#e8e6f0" opacity=".6">
+              <circle cx="44" cy="40" r="2"/><circle cx="58" cy="76" r="1.5"/><circle cx="190" cy="34" r="2"/>
+              <circle cx="200" cy="84" r="1.5"/><circle cx="176" cy="100" r="2"/><circle cx="66" cy="100" r="1.5"/>
+            </g>
+          </svg>
+        </div>
+        <h2>Pad states</h2>
+        <p>Crossfade your own audio files with a conductor and a granular layer.</p>
+      </a>
+    </nav>
+  </div>
+  </div>
+
+  <p class="foot">
+    A personal exploration, built step by step.
+    <a href="https://github.com/RooXam/drifton/blob/main/ROADMAP.md">Roadmap →</a>
+  </p>
 </main>
 </body>
 </html>

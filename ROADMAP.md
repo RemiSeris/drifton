@@ -18,6 +18,26 @@ Principes de la musique fonctionnelle à respecter :
 - **Modulation d'amplitude** façon Brain.fm (~16 Hz pour le focus, plus lent pour la détente).
 - **Jamais de répétition à l'identique** (boucles de longueurs premières entre elles, dérive aléatoire lente).
 
+## Positionnement
+
+Drifton est une **collection de petits outils autour du son**, pas une application unique :
+écouter (musique fonctionnelle), jouer et apprendre (piano, accords), fabriquer (synthé),
+plus un coin « Lab » pour les expériences. La cohérence vient du moteur commun (le synthé
+maison), du design et de la simplicité, pas d'un public unique. Chaque outil a sa propre
+adresse pour être partagé seul.
+
+- Objectif personnel d'abord : explorer des idées. Si un outil devient utile, viser une
+  publication publique avec un usage **simple, sans inscription, qui marche en local**.
+- Pas de promesse affichée (« gratuit », « sans compte », « aucune donnée ») : un serveur
+  (ML) ou des fonctions premium avec compte restent possibles plus tard.
+- Pistes notées pour plus tard :
+  - **PWA** (manifest + service worker) : installable sur l'écran d'accueil de l'iPad,
+    fonctionne hors ligne ;
+  - **statistiques d'usage sans cookies** ni données perso (GoatCounter, Cloudflare Web
+    Analytics) pour savoir quels outils servent ;
+  - **dons** (Ko-fi, GitHub Sponsors, Liberapay) ; éventuellement une fonction payante par
+    clé de licence gardée dans le navigateur, seulement si l'usage le justifie.
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |
@@ -55,12 +75,13 @@ valeur de ces paramètres au moment du clic.
 
 | Chemin | Contenu |
 |---|---|
-| `index.html` | page d'accueil du site : 4 cases au même niveau (Generator, Synth, Drone player, Pad states) |
+| `index.html` | accueil : outils rangés par intention (Listen : Focus music, Drone · Play & learn : Piano score, Chords bientôt · Make : Synth · Lab : Pad states), une illustration SVG par outil |
 | `common.css` | styles partagés (accueil, synth, generator, pads) |
 | `player/` | v1, le « Drone player » d'origine : drone génératif simple, presets Focus / Relax / Deep |
 | `pads/` | prototype « nappe en 3 états » : crossfade d'exports audio piloté par un conducteur, couche granulaire, modulation d'amplitude. Exploration, a mené aux décisions ci-dessus |
 | `synth/` | synthé maison, construit brique par brique (voir étapes) |
 | `generator/` | générateur : 4 instruments du synthé joués par des règles. `harmony.js` (modes, accords par empilement de tierces, chaîne de Markov, voice leading), `generator.js` (rôles pad / basse / cloches / texture, ordonnanceur à anticipation), `main.js` (page, piano roll). Réutilise les fichiers de `synth/` |
+| `score/` | lecteur de partition MIDI pour s'entraîner au piano (v1, voir « Autres axes ») |
 
 Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `index.html`) :
 
@@ -127,20 +148,44 @@ la page d'accueil.
   positions possibles.
 
 ### Lecteur de partition MIDI (`score/`)
-- Charger un fichier `.mid` (glisser-déposer), le lire avec le synthé.
-- **Vue piano** : notes qui tombent vers un clavier, en couleurs par main / piste ;
-  tempo réglable, boucle sur un passage, mode « attendre que je joue la bonne note »
-  (avec un clavier branché en Web MIDI).
-- **Vue guitare** : notes placées sur le manche / tablature qui défile.
-- À écrire nous-mêmes (zéro dépendance) : un petit lecteur de fichiers MIDI (format simple :
-  en-tête, pistes, événements note on / note off, tempo).
+Usage visé : s'entraîner au piano sur iPad (Safari).
+
+- [x] **v1** : ouvrir un `.mid` (bouton ou glisser-déposer), notes qui tombent vers un
+  clavier (couleur par piste / main, touches qui s'allument, numéros de mesure), vitesse
+  20–150 %, boucle Start / End calée sur les mesures, voir / entendre chaque piste
+  séparément, noms des notes, glisser la vue pour avancer / reculer, toucher = lecture /
+  pause, morceau de démo, le dernier fichier est gardé dans le navigateur.
+  | Fichier | Rôle |
+  |---|---|
+  | `midi.js` | lecteur de fichiers MIDI maison : en-tête, pistes, running status, tempo (changements compris), mesures, pédale de sustain, batterie ignorée → `song` (notes en secondes, parties, barres de mesure) |
+  | `piano.js` | son léger type piano / clavier (sinus + dent de scie filtrée qui s'assombrit), 48 voix max, limiteur |
+  | `player.js` | transport : position, programmation à l'avance sur l'horloge audio, vitesse, boucle sans trou |
+  | `roll.js` | vue notes qui tombent + clavier (canvas) |
+  | `timeline.js` | barre du morceau entier, toucher pour se déplacer |
+  | `demo.js` | « Ode à la joie » (domaine public) pour essayer sans fichier |
+  | `main.js` | page : fichiers, boutons, boucle, raccourcis (Espace, ← →, A / B / L) |
+- [ ] **v2 : détection au micro** + mode « attendre que je joue la bonne note ». Safari
+  sur iPad ne gère pas Web MIDI : le micro est donc la voie principale. Idée : on sait
+  déjà quelles notes sont attendues, il suffit de vérifier si elles sonnent (énergie aux
+  fréquences attendues et à leurs harmoniques dans le spectre), plus simple que de
+  reconnaître n'importe quel accord. Une note seule : détection de hauteur classique
+  (autocorrélation / YIN). Accords libres : plus dur (modèle ML type « basic-pitch »).
+  Web MIDI en plus pour un clavier branché sur ordinateur (Chrome).
+- [ ] Plus tard : une main à la fois avec l'autre jouée par l'ordinateur (déjà possible via
+  « Hear »), séparer les mains quand le fichier n'a qu'une piste, métronome, décompte,
+  zoom, plage de 88 touches, vue partition classique.
+- [ ] **Vue guitare** : notes placées sur le manche / tablature qui défile.
 - Design original (pas de copie d'un logiciel existant).
 
 ## En ligne
 
-GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`.
+GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-14** — Positionnement : Drifton devient une collection de petits outils autour du son. Accueil refait, rangé par intention, avec des illustrations SVG ; le générateur s'affiche « Focus music ». Notés pour plus tard : PWA, statistiques sans cookies, dons. Lecteur piano : main gauche en pourpre foncé, plus sombre que la droite (graves).
+
+- **2026-11-14** — Lecteur de partition MIDI piano, v1 (`score/`) : lecteur de fichiers MIDI maison, notes qui tombent, vitesse, boucle sur les mesures, mains séparées. Pensé pour l'iPad. v2 notée : détection des notes au micro.
 
 - **2026-11-14** — Deux nouveaux axes notés : entraînement aux accords piano / guitare, et lecteur de partition MIDI qui défile (piano et guitare). La roadmap reste publique pour l'instant.
 

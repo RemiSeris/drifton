@@ -12,7 +12,10 @@ Lire **`ROADMAP.md`** en début de session : vision, décisions prises, architec
   (`file://`) : pas de modules ES ni de `fetch`, des `<script>` classiques dans l'ordre.
   Les liens vers une page pointent sur `dossier/index.html`, jamais sur `dossier/`
   (en `file://`, un lien vers un dossier affiche la liste des fichiers).
-- Tout le projet est Drifton. `index.html` (racine) est la page d'accueil qui mène aux
-  parties, au même niveau : `generator/`, `synth/`, `player/` (version d'origine), `pads/`.
-  Styles partagés dans `common.css`.
+- Tout le projet est Drifton : une **collection de petits outils autour du son**, cohérents
+  (même moteur, même design), chacun utilisable seul avec sa propre adresse.
+  `index.html` (racine) est l'accueil, rangé par intention : Listen (`generator/` = « Focus
+  music », `player/` = « Drone »), Play & learn (`score/`, bientôt `chords/`), Make
+  (`synth/`), Lab (`pads/`). Une illustration SVG plate et arrondie par outil, dans la
+  palette du site. Styles partagés dans `common.css`.
 - Ne commiter que sur demande.

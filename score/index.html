@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Drifton Piano Score</title>
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="score.css">
+</head>
+<body class="score">
+<header class="bar">
+  <a href="../index.html" class="back">← Drifton</a>
+  <span class="song" id="song">—</span>
+  <button class="btn" id="open" type="button">Open MIDI file</button>
+  <input type="file" id="file" accept=".mid,.midi,audio/midi,audio/x-midi" hidden>
+  <button class="btn" id="demo" type="button">Demo</button>
+</header>
+
+<div class="bar transport">
+  <button class="btn icon" id="restart" type="button" aria-label="Back to start">
+    <svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
+  </button>
+  <button class="btn icon play-btn" id="play" type="button" aria-label="Play / Pause">
+    <svg viewBox="0 0 24 24"><path id="play-icon" d="M8 5v14l11-7z"/></svg>
+  </button>
+  <span class="clock" id="clock">0:00 / 0:00</span>
+
+  <div class="group">
+    <span class="lbl">Speed</span>
+    <button class="btn small" id="slower" type="button" aria-label="Slower">−</button>
+    <input type="range" id="speed" min="20" max="150" step="5" value="100" aria-label="Speed">
+    <button class="btn small" id="faster" type="button" aria-label="Faster">+</button>
+    <output id="speed-out">100%</output>
+  </div>
+
+  <div class="group">
+    <span class="lbl">Loop</span>
+    <button class="btn small" id="loop-a" type="button">Start</button>
+    <button class="btn small" id="loop-b" type="button">End</button>
+    <button class="btn small toggle" id="loop-on" type="button">On</button>
+    <button class="btn small" id="loop-clear" type="button">Clear</button>
+    <span class="loop-info" id="loop-info"></span>
+  </div>
+</div>
+
+<canvas id="timeline" class="timeline"></canvas>
+<div class="roll-box">
+  <canvas id="roll"></canvas>
+  <div class="asleep" id="asleep">Tap to wake the audio</div>
+</div>
+
+<footer class="bar">
+  <div class="parts" id="parts"></div>
+  <button class="btn small toggle" id="names" type="button">Note names</button>
+  <label class="group"><span class="lbl">Volume</span><input type="range" id="volume" min="0" max="100" value="80"></label>
+  <span class="status" id="status"></span>
+</footer>
+
+<script src="midi.js"></script>
+<script src="demo.js"></script>
+<script src="piano.js"></script>
+<script src="player.js"></script>
+<script src="roll.js"></script>
+<script src="timeline.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
