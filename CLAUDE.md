@@ -12,6 +12,7 @@ Lire **`ROADMAP.md`** en début de session : vision, décisions prises, architec
   (`file://`) : pas de modules ES ni de `fetch`, des `<script>` classiques dans l'ordre.
   Les liens vers une page pointent sur `dossier/index.html`, jamais sur `dossier/`
   (en `file://`, un lien vers un dossier affiche la liste des fichiers).
-- La page racine `index.html` est le produit Drifton ; `lab/` regroupe les pistes
-  d'exploration (page d'accueil `lab/index.html`).
+- Tout le projet est Drifton. `index.html` (racine) est la page d'accueil qui mène aux
+  parties, au même niveau : `generator/`, `synth/`, `player/` (version d'origine), `pads/`.
+  Styles partagés dans `common.css`.
 - Ne commiter que sur demande.

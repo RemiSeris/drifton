@@ -1,52 +1,31 @@
 # Drifton
 
-A local generative drone music tool to focus or relax.
+Generative functional music in the browser, to focus or relax.
 
-The sound is **generated in real time** in your browser (Web Audio API).
-No audio files, no dependencies, no server — everything runs locally.
+Everything is **generated in real time** with the Web Audio API: no audio files, no
+dependencies, no server. Long-term goal: an infinite stream of music that adapts to
+the listener (see [`ROADMAP.md`](ROADMAP.md)).
+
+Live: https://rooxam.github.io/drifton/
 
 ## Use
 
-**Double-click `index.html`** → it opens in your browser → click the play button.
-That's it.
+**Double-click `index.html`**: the home page links to every part. Each part also
+works on its own by double-clicking its `index.html`.
 
-- Pick an ambience: **Focus**, **Relax** or **Deep**.
-- Round button = play / pause (or the **Space** bar).
-- Slider = volume.
+| Part | Folder | What it is |
+|---|---|---|
+| Generator | `generator/` | Press play: four instruments played by rules (pad, bass, bells, texture), modal harmony, voice-led chords |
+| Synth | `synth/` | The home-made synth: play the instruments from the keyboard and shape their sound |
+| Drone player | `player/` | The original version: generative drone with Focus / Relax / Deep presets |
+| Pad states | `pads/` | Early prototype: one pad in three states crossfaded by a conductor, granular layer, amplitude modulation |
 
-It never loops: the voices "breathe" and notes appear at random. You can leave it
-running indefinitely.
-
-## File structure
-
-| File | Role |
-|---|---|
-| `index.html` | Markup, ties everything together |
-| `styles.css` | Styling |
-| **`presets.js`** | **The ambiences — this is where you tweak the sound** |
-| `engine.js` | The audio generation engine (Web Audio API) |
-| `ui.js` | Wires up the buttons and the display |
-
-The script load order (`presets` → `engine` → `ui`) is set at the bottom of
-`index.html` and matters: don't change it.
+`common.css` holds the styles shared by the home page, the synth, the generator and
+the pad prototype.
 
 ## Edit / iterate
 
-- To **shape the sound**: open `presets.js`. Every parameter is commented (root
-  note, chord, reverb, noise, speed…). To add an ambience, copy a block and change
-  the key — the button shows up automatically.
-- To touch the **engine** (reverb, noise, filters, voice structure): `engine.js`.
-- After a change, **save and refresh the tab** (F5).
-
-## Access it from any computer
-
-Since it's just static files, you can host it for free by **drag-and-drop**, no
-command line needed:
-
-- [app.netlify.com/drop](https://app.netlify.com/drop) — drop the folder, get a URL.
-- or [Cloudflare Pages](https://pages.cloudflare.com/) / GitHub Pages.
-
-## Ideas
-
-- Advanced sliders (density, pitch, filter, reverb) to explore sounds.
-- Remember the last preset + volume (`localStorage`).
+- Each part is plain HTML + JS loaded with classic `<script>` tags; the load order at
+  the bottom of each `index.html` matters.
+- Drone player sounds: `player/presets.js`. Synth starter sounds: `synth/patches.js`.
+- After a change, save and refresh the tab.

@@ -175,5 +175,13 @@ input[type=range]::-moz-range-thumb {
   z-index: 1;
 }
 
-.hint a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
-.hint a:hover { color: var(--fg); }
+.home {
+  position: fixed;
+  top: 1.25rem;
+  left: 1.25rem;
+  z-index: 2;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: clamp(0.8rem, 1vw, 0.9rem);
+}
+.home:hover { color: var(--fg); }

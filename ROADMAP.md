@@ -55,13 +55,14 @@ valeur de ces paramètres au moment du clic.
 
 | Chemin | Contenu |
 |---|---|
-| `index.html`, `engine.js`, `presets.js`, `ui.js`, `styles.css` | v1 en ligne : drone génératif simple, presets Focus / Relax / Deep |
-| `lab/index.html` | page d'accueil du lab : accès à toutes les parties (lien « Lab » en bas de la page principale) |
-| `lab/pads/` | prototype « nappe en 3 états » : crossfade d'exports audio piloté par un conducteur, couche granulaire, modulation d'amplitude. Exploration, a mené aux décisions ci-dessus |
-| `lab/synth/` | synthé maison, construit brique par brique (voir étapes) |
-| `lab/generator/` | générateur : 4 instruments du synthé joués par des règles. `harmony.js` (modes, accords par empilement de tierces, chaîne de Markov, voice leading), `generator.js` (rôles pad / basse / cloches / texture, ordonnanceur à anticipation), `main.js` (page, piano roll). Réutilise les fichiers de `lab/synth/` |
+| `index.html` | page d'accueil du site : 4 cases au même niveau (Generator, Synth, Drone player, Pad states) |
+| `common.css` | styles partagés (accueil, synth, generator, pads) |
+| `player/` | v1, le « Drone player » d'origine : drone génératif simple, presets Focus / Relax / Deep |
+| `pads/` | prototype « nappe en 3 états » : crossfade d'exports audio piloté par un conducteur, couche granulaire, modulation d'amplitude. Exploration, a mené aux décisions ci-dessus |
+| `synth/` | synthé maison, construit brique par brique (voir étapes) |
+| `generator/` | générateur : 4 instruments du synthé joués par des règles. `harmony.js` (modes, accords par empilement de tierces, chaîne de Markov, voice leading), `generator.js` (rôles pad / basse / cloches / texture, ordonnanceur à anticipation), `main.js` (page, piano roll). Réutilise les fichiers de `synth/` |
 
-Organisation de `lab/synth/` (un fichier = une brique, ordre de chargement dans `index.html`) :
+Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `index.html`) :
 
 | Fichier | Rôle |
 |---|---|
@@ -79,7 +80,7 @@ Organisation de `lab/synth/` (un fichier = une brique, ordre de chargement dans 
 
 ## Étapes
 
-### Synthé (`lab/synth/`)
+### Synthé (`synth/`)
 - [x] **1. La voix** : 2 oscillateurs (sinus, triangle, dent de scie, carré) avec unisson, filtre (LP/HP/BP/notch, résonance), enveloppe de filtre, enveloppe d'ampli, polyphonie, clavier, oscilloscope et spectre.
 - [x] **2. La modulation** : 2 LFO (sinus, tri, scie, carré, Drift, S&H), matrice de 4 slots (cutoff, pitch, detune d'unisson, volume, pan), source de bruit (blanc, rose, brun). Synth instanciable plusieurs fois + notes programmées dans le temps (prépare la génération).
 - [ ] **3. Les effets**, un fichier chacun : saturation (WaveShaper), chorus (delay court modulé), delay (avec feedback), réverbe (convolution puis réseau de delays type Freeverb). Éventuellement phaser.
@@ -95,16 +96,18 @@ Organisation de `lab/synth/` (un fichier = une brique, ordre de chargement dans 
 - [ ] **9. Signaux implicites et contextes** : sauts, durée d'écoute, changements de volume ; profils focus / relax / sommeil ; heure de la journée.
 
 ### Plus tard
-- [ ] Intégrer le nouveau moteur dans l'appli principale.
+- [ ] Faire converger les pistes en une expérience Drifton unique (le générateur + conducteur + feedback, avec l'interface simple du player).
 - [ ] Atelier Python (`tools/` ou `notebooks/`) : prototyper chaque effet en numpy pour le comprendre, puis le porter en JS.
 - [ ] Textures et samples personnels (export Ableton) en couche granulaire.
 - [ ] Vrai modèle de préférences, éventuellement serveur pour agréger plusieurs utilisateurs.
 
 ## En ligne
 
-GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ — le lab est sur `/lab/` (page d'accueil), le prototype de nappes sur `/lab/pads/`, le synthé sur `/lab/synth/`, le générateur sur `/lab/generator/`.
+GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`.
 
 ## Journal
+
+- **2026-11-14** — Réorganisation : tout le projet est Drifton ; la page d'accueil donne accès aux 4 parties au même niveau (le player d'origine passe dans `player/`, le dossier `lab/` disparaît).
 
 - **2026-11-14** — Prototype `lab/` (nappe en 3 états). Discussion de direction → choix du synthé maison + générateur + apprentissage par feedback. Étapes 1 et 2 du synthé faites (voix, puis LFO / bruit / matrice de modulation, multi-instances), onglets pour 4 instruments, puis première version du générateur (étape 5).
 

@@ -5,31 +5,64 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0a0a0f">
 <title>Drifton</title>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="common.css">
 </head>
 <body>
-  <div class="breath" id="breath"></div>
+<main class="lab">
+  <header>
+    <h1>Drifton</h1>
+    <p class="intro">
+      Generative functional music in the browser, to focus or relax. The long-term
+      goal: an infinite stream that adapts to you. Each part below explores one
+      direction.
+    </p>
+  </header>
 
-  <div class="stage">
-    <h1>Focus</h1>
+  <nav class="hub">
+    <a class="card" href="generator/index.html">
+      <span class="tag">Composition · step 5</span>
+      <h2>Generator</h2>
+      <p>Press play and let it run. Four instruments played by rules: a pad holding
+        voice-led chords, a bass, sparse bells wandering on the scale, and a texture.
+        Pick the key, the mode, the pace.</p>
+      <span class="go">Open →</span>
+    </a>
 
-    <div class="presets" id="presets"></div>
+    <a class="card" href="synth/index.html">
+      <span class="tag">Sound · steps 1–2</span>
+      <h2>Synth</h2>
+      <p>Play the four instruments (Pad, Bass, Bells, Texture) from your keyboard and
+        shape their sound: oscillators, noise, filter, envelopes, LFOs and modulation.</p>
+      <span class="go">Open →</span>
+    </a>
 
-    <button class="play" id="play" aria-label="Play / Pause">
-      <svg id="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-    </button>
+    <a class="card" href="player/index.html">
+      <span class="tag">The original</span>
+      <h2>Drone player</h2>
+      <p>The first version: a generative drone with Focus, Relax and Deep presets.
+        One button, and it never loops.</p>
+      <span class="go">Open →</span>
+    </a>
 
-    <div class="volume">
-      <svg viewBox="0 0 24 24"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4z"/></svg>
-      <input type="range" id="volume" min="0" max="100" value="65" aria-label="Volume">
-    </div>
-  </div>
+    <a class="card" href="pads/index.html">
+      <span class="tag">Samples · early prototype</span>
+      <h2>Pad states</h2>
+      <p>One pad exported in three states, crossfaded by a conductor, with a granular
+        layer and amplitude modulation. Drop your own audio files on it.</p>
+      <span class="go">Open →</span>
+    </a>
+  </nav>
 
-  <div class="hint">Local generative drone · <a href="lab/index.html">Lab</a></div>
-
-  <!-- Load order matters: presets (config) → engine (sound) → ui (controls) -->
-  <script src="presets.js"></script>
-  <script src="engine.js"></script>
-  <script src="ui.js"></script>
+  <section>
+    <h2>Coming next</h2>
+    <ol class="next">
+      <li><b>Effects</b>: saturation, chorus, delay, reverb.</li>
+      <li><b>Patches</b>: save and share sounds between the synth and the generator.</li>
+      <li><b>Conductor</b>: the music slowly evolves on its own over a session.</li>
+      <li><b>Feedback</b>: 👍 / 👎 to teach it what you like.</li>
+    </ol>
+    <a class="back" href="https://github.com/RooXam/drifton/blob/main/ROADMAP.md">Full roadmap →</a>
+  </section>
+</main>
 </body>
 </html>
