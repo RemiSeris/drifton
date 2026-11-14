@@ -168,7 +168,7 @@ canvas { width: 100%; height: 120px; border-radius: 10px; background: var(--bg);
 }
 
 /* Lab home: cards linking to each part */
-.hub { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+.hub { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 .card {
   background: var(--card);
   border: 1px solid transparent;
@@ -182,7 +182,10 @@ canvas { width: 100%; height: 120px; border-radius: 10px; background: var(--bg);
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 .card:hover, .card:focus-visible { border-color: var(--accent); background: var(--card-active); }
-.card.featured { grid-column: 1 / -1; border-color: var(--card-active); }
+.card.product { border-color: var(--accent); background: linear-gradient(135deg, var(--card-active), var(--card)); padding: 1.5rem; }
+.card.product h2 { font-size: 1.5rem; }
+.card.product p { color: var(--fg); opacity: 0.8; }
+.axes-title { margin: 0.75rem 0 -0.25rem; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
 .card h2 { font-size: 1.15rem; }
 .card p { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.5; flex: 1; }
 .card .tag { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
@@ -190,6 +193,6 @@ canvas { width: 100%; height: 120px; border-radius: 10px; background: var(--bg);
 .next { margin: 0; padding-left: 1.2rem; color: var(--muted); font-size: 0.9rem; line-height: 1.8; }
 .next b { color: var(--fg); font-weight: 500; }
 
-@media (max-width: 560px) {
+@media (max-width: 720px) {
   .hub { grid-template-columns: 1fr; }
 }
