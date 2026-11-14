@@ -88,7 +88,7 @@ Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `ind
 
 ### Musique
 - [x] **5. Générateur** (première version) : plusieurs instruments (`Synth`) en parallèle, chacun avec un rôle (nappe, basse, cloches/notes éparses, texture). Un état harmonique commun (gamme, accord courant, enchaînements par chaîne de Markov) ; chaque rôle choisit ses notes dedans selon ses règles (densité, registre, probabilité) ; un ordonnanceur à anticipation programme les `noteOn/noteOff` à des temps précis.
-- [ ] **6. Conducteur** : dérive lente de tous les paramètres, arc de session, modulation d'amplitude (reprendre les idées de `lab/`).
+- [ ] **6. Conducteur** : dérive lente de tous les paramètres, arc de session, modulation d'amplitude (reprendre les idées de `pads/`).
 
 ### Adaptation
 - [ ] **7. Feedback** : 👍/👎 + boutons « pourquoi ? », enregistrement des paramètres au moment du clic (localStorage), vue « ce que Drifton a appris ».
