@@ -52,12 +52,13 @@ const LANE_NAMES = { kick: "Kick", snare: "Snare", hat: "Hats", perc: "Perc", ba
 
 // ---- Transport ----
 
-$("play").addEventListener("click", async () => {
+async function togglePlay() {
   await ctx.resume();
   groove.running ? groove.stop() : groove.start();
   $("play").classList.toggle("playing", groove.running);
   $("play-icon").setAttribute("d", groove.running ? "M7 7h10v10H7z" : "M8 5v14l11-7z");
-});
+}
+$("play").addEventListener("click", togglePlay);
 
 $("volume").addEventListener("input", (e) => setParam(ctx, master.input.gain, e.target.value / 100, true));
 
@@ -111,17 +112,63 @@ applyStyles();
 
 // ---- Instruments (mute) ----
 
+const laneChecks = {};
 for (const lane of GROOVE_LANES) {
   const row = document.createElement("label");
   row.className = "lane";
   row.style.setProperty("--c", colors[lane]);
   row.innerHTML = `<input type="checkbox" checked><span class="dot"></span>${LANE_NAMES[lane]}`;
-  row.querySelector("input").addEventListener("change", (e) => {
-    groove.on[lane] = e.target.checked;
-    if (DRUM_LANES.includes(lane)) drums.setOn(lane, e.target.checked);
-  });
+  const check = row.querySelector("input");
+  laneChecks[lane] = check;
+  check.addEventListener("change", () => setLane(lane, check.checked));
   $("lanes").append(row);
 }
+
+function setLane(lane, on) {
+  groove.on[lane] = on;
+  laneChecks[lane].checked = on;
+  if (DRUM_LANES.includes(lane)) drums.setOn(lane, on);
+}
+
+// ---- Live keyboard ----
+// We read `e.code` (the physical key), not `e.key` (the character): on a French AZERTY
+// keyboard the top row types & é " ' ( - without Shift, but its codes are still
+// Digit1…Digit6.
+
+function flashKey(name) {
+  const el = document.querySelector(`.key[data-key="${name}"]`);
+  if (!el) return;
+  el.classList.add("hit");
+  setTimeout(() => el.classList.remove("hit"), 140);
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.tagName === "SELECT") return; // let menus use their own keys
+  const code = e.code;
+  let handled = true;
+  if (code === "Enter") { togglePlay(); flashKey("Enter"); }
+  else if (code === "Space") {
+    if (groove.running) groove.requestFill(); else togglePlay();
+    flashKey("Space");
+  } else if (code === "KeyB") { groove.requestBreak(); flashKey("KeyB"); }
+  else if (code === "ArrowRight" || code === "ArrowLeft") {
+    groove.stepMorph(code === "ArrowRight" ? 1 : -1);
+    $("auto").checked = false;
+    $("mix").disabled = false;
+    $("mix").value = Math.round(groove.mix * 100);
+    idleUpdate();
+    flashKey("Arrows");
+  } else if (/^Digit[1-6]$/.test(code)) {
+    const lane = GROOVE_LANES[Number(code.slice(5)) - 1];
+    setLane(lane, !groove.on[lane]);
+    flashKey("Digits");
+  } else handled = false;
+  if (handled) {
+    e.preventDefault(); // no page scroll on Space or arrows, no slider move
+    if (document.activeElement && document.activeElement.tagName === "INPUT") document.activeElement.blur();
+  }
+});
 
 // ---- Display ----
 
@@ -143,8 +190,9 @@ function drawGrid() {
   GROOVE_LANES.forEach((lane, r) => {
     const y = r * cellH;
     const style = owners[lane];
+    const live = groove.on[lane] && !(groove.breaking && DRUM_LANES.includes(lane));
     // Lane name, and under it the style it is playing right now.
-    g.globalAlpha = groove.on[lane] ? 0.9 : 0.3;
+    g.globalAlpha = live ? 0.9 : 0.3;
     g.fillStyle = colors[lane];
     g.font = `${11 * dpr}px sans-serif`;
     g.fillText(LANE_NAMES[lane], 0, y + cellH / 2 - 6 * dpr);
@@ -160,7 +208,7 @@ function drawGrid() {
       g.fillStyle = css.getPropertyValue("--fg").trim();
       g.fillRect(x + pad, y + pad, cellW - 2 * pad, cellH - 2 * pad);
       if (p > 0) {
-        g.globalAlpha = (groove.on[lane] ? 0.12 : 0.05) + p * (groove.on[lane] ? 0.5 : 0.1);
+        g.globalAlpha = (live ? 0.12 : 0.05) + p * (live ? 0.5 : 0.1);
         g.fillStyle = colors[lane];
         g.fillRect(x + pad, y + pad, cellW - 2 * pad, cellH - 2 * pad);
       }
@@ -193,8 +241,11 @@ function updateReadout() {
   const onB = GROOVE_LANES.filter((l) => owners[l] !== groove.a).length;
   const where = onB === 0 ? groove.a.name : onB === GROOVE_LANES.length ? groove.b.name
     : `${groove.a.name} → ${groove.b.name} · ${onB}/${GROOVE_LANES.length} on ${groove.b.name}`;
-  const fill = groove.running && groove.fill && groove.fill.to !== groove.core ? " · fill!" : "";
-  $("status").textContent = `${where}${fill} · ${Math.round(groove.bpm)} bpm · ${NOTE_NAMES[harmony.root]} ${harmony.mode}`;
+  const live = !groove.running ? ""
+    : groove.breaking ? " · break!"
+    : groove.pendingBreak ? " · break next bar"
+    : groove.fill || groove.queuedFill !== null ? " · fill!" : "";
+  $("status").textContent = `${where}${live} · ${Math.round(groove.bpm)} bpm · ${NOTE_NAMES[harmony.root]} ${harmony.mode}`;
   if (groove.autoMorph) $("mix").value = Math.round(groove.mix * 100);
   $("bpm-out").textContent = Math.round(groove.bpm);
   if (groove.followTempo) $("bpm").value = Math.round(groove.bpm);

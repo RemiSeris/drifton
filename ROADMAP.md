@@ -212,6 +212,11 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   temps musicaux (croche pointée), répétitions de plus en plus sourdes. L'espace du dub
   passe par l'écho et non par la réverbe : une frappe dans une réverbe de bruit devient un
   souffle, une frappe dans un écho reste une frappe.
+- **Jeu en live au clavier** : Entrée lecture / stop ; Espace roulement (du prochain temps à
+  la fin de la mesure, ou la mesure suivante si trop tard) ; B break (la batterie se tait
+  une mesure, basse et accords continuent) ; ← → morph d'un instrument par pression (d'un
+  seuil de passage au suivant) ; 1–6 coupe / remet kick, snare, hats, perc, basse, keys.
+  Lecture par `e.code` (touche physique) : les chiffres marchent en AZERTY sans Maj.
 - Ordonnanceur plus serré que le générateur (25 ms / 150 ms d'avance) pour réagir vite au
   curseur ; avance allongée quand l'onglet est caché.
 - Pistes : d'autres styles (house, afrobeat en 12/8, trip-hop…), un éditeur de grille à la
@@ -222,6 +227,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Groove jouable en live au clavier (roulement, break, morph pas à pas, coupures), avec un encart des touches qui s'allument à la frappe.
 
 - **2026-11-15** — Morph refait : passage piste par piste sur la mesure au lieu du mélange des probabilités (qui donnait un groove flou et un tempo qui glissait à chaque mesure), roulement avant le changement de batterie, roulement court toutes les 8 mesures.
 

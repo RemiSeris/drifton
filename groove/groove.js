@@ -54,6 +54,33 @@ class Groove {
     this.synthEcho = {};
     this.owners = this.wanted();
     this.fill = null; // { from: step, to: style } while a fill is playing
+    this.queuedFill = null; // live: a fill asked too late in the bar, played on the next
+    this.pendingBreak = false; // live: drums drop out for the next bar
+    this.breaking = false;
+  }
+
+  // ---- Live controls (keyboard) ----
+
+  // A fill from the next beat to the end of this bar (or the next bar, if this one is
+  // almost over). Ignored while a style change is already being announced.
+  requestFill() {
+    if (!this.running || this.fill) return;
+    const from = Math.max(4, Math.ceil(this.step / 4) * 4);
+    if (from <= 12) this.fill = { from, to: this.core, fromBpm: this.bpm };
+    else this.queuedFill = 8;
+  }
+
+  // The drums drop out for one whole bar, then come back on the downbeat.
+  requestBreak() {
+    if (this.running) this.pendingBreak = true;
+  }
+
+  // Move the morph by one instrument: to the next (dir = 1) or previous (-1) hand-over.
+  stepMorph(dir) {
+    this.autoMorph = false;
+    const marks = [0, ...new Set(Object.values(HANDOVER))].sort((x, y) => x - y).concat(1);
+    if (dir > 0) this.mix = marks.find((m) => m > this.mix + 1e-6) ?? 1;
+    else this.mix = [...marks].reverse().find((m) => m < this.mix - 1e-6) ?? 0;
   }
 
   // Which style each lane should play for the current `mix`.
@@ -79,6 +106,9 @@ class Groove {
     this.barsInChord = 0;
     this.owners = this.wanted();
     this.fill = null;
+    this.queuedFill = null;
+    this.pendingBreak = false;
+    this.breaking = false;
     if (this.followTempo) this.bpm = this.core.bpm;
     this.nextStep = this.ctx.currentTime + 0.1;
     this.degree = 0;
@@ -133,9 +163,14 @@ class Groove {
     // Plan this bar's fill: a long one before a core switch, a short one every 8 bars.
     if (want.kick !== this.core) {
       this.fill = { from: 8, to: want.kick, fromBpm: this.bpm };
+    } else if (this.queuedFill !== null) {
+      this.fill = { from: this.queuedFill, to: this.core, fromBpm: this.bpm };
     } else if (this.bar % 8 === 7) {
       this.fill = { from: 12, to: this.core, fromBpm: this.bpm };
     }
+    this.queuedFill = null;
+    this.breaking = this.pendingBreak;
+    this.pendingBreak = false;
 
     if (this.bar > 0) {
       this.barsInChord++;
@@ -190,6 +225,7 @@ class Groove {
 
     for (const lane of GROOVE_LANES) {
       if (!this.on[lane]) continue;
+      if (this.breaking && DRUM_LANES.includes(lane)) continue;
       const style = this.owners[lane];
       let p = style.lanes[lane].prob[i];
       let v = style.lanes[lane].vel[i];
