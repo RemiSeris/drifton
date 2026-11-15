@@ -216,10 +216,12 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   et partent au prochain temps (compteur de pas absolu `abs`).
   Espace = roulement qui grossit (plein en 1 mesure, doublé en triples croches à mi-chemin),
   fini au temps suivant le relâché ; B = break tant qu'on tient, la batterie revient sur le
-  « un » ; F = filtre DJ (`synth/djfilter.js`, passe-bas sur tout le mix, réverbe comprise,
-  qui se ferme en 3 s avec résonance montante) ; R = montée (kick et basse sortent, roulement
-  qui grossit sur 2 mesures, filtre qui se ferme), relâché = DROP sur le prochain « un » :
-  filtre grand ouvert et kick plein. ← → morph d'un instrument par pression ; 1–6 coupes ;
+  « un » ; V = filtre DJ (`synth/djfilter.js`, passe-bas sur tout le mix, réverbe comprise,
+  qui se ferme en 3 s avec résonance montante) ; N = montée (kick et basse sortent, roulement
+  qui grossit sur 2 mesures, filtre qui se ferme) ; relâché = DROP sur le temps suivant,
+  qui devient le « un » d'une nouvelle mesure (au plus un temps d'attente) : filtre grand
+  ouvert et kick plein. Un appui court (< 0,35 s) verrouille la montée ; un second appui
+  la fait tomber. ← → morph d'un instrument par pression ; 1–6 coupes ;
   Entrée lecture. Touches 1–6 reconnues par touche physique ou par caractère (AZERTY).
   Une touche tenue reste allumée dans l'encart ; perte du focus = tout est relâché.
 - **Mélodie au clavier** (`groove/melody.js`) : les deux rangées de lettres jouent la gamme
@@ -259,6 +261,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Drop plus direct : il tombait sur le premier temps de la mesure suivante (jusqu'à plus d'une mesure d'attente, geste et effet décrochés) ; il tombe maintenant sur le temps suivant le geste et recommence la mesure. Appui court = montée verrouillée, second appui = drop. Le compositeur compte ses propres mesures et oublie les notes prévues sur l'ancienne grille.
 
 - **2026-11-15** — Compositeur de mélodie : modes Free / Guide (jeu de rythme avec notes qui tombent, touches allumées à l'avance, score) / Auto.
 

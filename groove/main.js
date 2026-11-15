@@ -504,6 +504,7 @@ function frame() {
   drawStage($("stage"), {
     now: ctx.currentTime, hits: groove.hits, live: groove.live, running: groove.running,
     filter: djf.amount, lastDrop: groove.lastDrop, held, lead: melody.log,
+    latched: groove.latched && !held.has("build"),
     guide: composer.mode === "free" ? null : {
       notes: composer.notes, feedback: composer.feedback, sixteenth: 60 / groove.bpm / 4,
       noteFor: (code) => melody.noteFor(code), game: composer.mode === "guide",

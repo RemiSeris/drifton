@@ -35,6 +35,7 @@ class Composer {
     this.notes = [];     // planned and recent notes
     this.cur = 2;        // current scale step of the walk
     this.motif = null;   // { onsets, steps } of the phrase's first bar
+    this.bars = 0;       // bars seen since the start (a drop can restart a bar early)
     this.answer = null;
     // Guide game.
     this.streak = 0; this.best = 0; this.hits = 0; this.judgedCount = 0;
@@ -45,6 +46,8 @@ class Composer {
     this.notes = [];
     this.motif = this.answer = null;
     this.cur = 2;
+    this.bars = 0;
+    this.lastBarAbs = undefined;
   }
 
   // Called by the groove for every step it schedules.
@@ -52,8 +55,15 @@ class Composer {
     if (this.mode === "free") return;
     this.sixteenth = sixteenth;
     this.clock = { abs, t };
-    // At each downbeat, write the bar after this one.
-    if (i === 0) this.planBar(abs / 16 + 1, abs, t, sixteenth);
+    // At each downbeat, write the bar after this one. A bar that starts early (a drop)
+    // makes the notes planned on the old grid fall off the beat: forget them.
+    if (i === 0) {
+      if (this.lastBarAbs !== undefined && abs !== this.lastBarAbs + 16) {
+        this.notes = this.notes.filter((n) => n.end !== undefined); // unplayed plans are off-grid now
+      }
+      this.lastBarAbs = abs;
+      this.planBar(++this.bars, abs, t, sixteenth);
+    }
     for (const n of this.notes) {
       if (n.abs !== abs) continue;
       n.t = t;                                   // now we know the exact time
@@ -103,7 +113,7 @@ class Composer {
     this.cur = steps[steps.length - 1];
 
     // Turn onsets into notes: each lasts until the next one (with a ceiling).
-    const start = bar * 16;
+    const start = absNow + 16;
     onsets.forEach((o, k) => {
       const next = k + 1 < onsets.length ? onsets[k + 1] : 16;
       const len = pos === 3 && k === onsets.length - 1 ? 16 - o : Math.min(feel.maxLen, next - o);

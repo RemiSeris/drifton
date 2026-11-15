@@ -230,6 +230,14 @@ function drawStage(canvas, s) {
     const mh = (H - 24 * dpr) * Math.max(0.04, lv);
     g.fillRect(mx, H - 12 * dpr - mh, mw, mh);
     if (building) big("BUILD", 0.35 + 0.5 * lv + 0.15 * Math.sin(s.now * (6 + 20 * lv)), 30 + 14 * lv);
+    if (building && s.latched) {
+      g.globalAlpha = 0.75;
+      g.fillStyle = "#e9e6ff";
+      g.font = `500 ${12 * dpr}px sans-serif`;
+      g.textAlign = "center";
+      g.fillText("press N again to drop", cx, cy + 34 * dpr);
+      g.textAlign = "start";
+    }
   }
 
   // Drop: white flash and the word.

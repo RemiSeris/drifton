@@ -94,18 +94,35 @@ class Groove {
     this.brk.until = Math.max(this.nextDownbeat(), this.nextDownbeat(this.brk.from + 1));
   }
 
-  // R down: build-up. Kick and bass leave, a roll starts and swells, the filter closes.
+  // N down: build-up. Kick and bass leave, a roll starts and swells, the filter closes.
+  // Two ways to play it:
+  // - hold, then release: the drop falls on the next beat after you let go
+  // - tap: the build-up keeps going by itself; tap again to drop
+  // The drop always starts a new bar: the beat it lands on becomes "the one", so it
+  // comes at most one beat after your gesture, never a whole bar later.
   buildPress() {
-    if (!this.running || (this.roll && this.roll.build)) return;
+    if (!this.running) return;
+    if (this.roll && this.roll.build) {
+      if (this.dropAt === null) this.dropSoon(); // already building (after a tap): drop
+      return;
+    }
     this.roll = { from: this.nextBeat(), until: Infinity, build: true };
+    this.buildPressedAt = this.ctx.currentTime;
     if (this.filter) this.filter.close(4);
   }
-  // R up: the DROP, on the next downbeat: everything back at once, filter wide open.
   buildRelease() {
-    if (!this.roll || !this.roll.build || this.roll.until !== Infinity) return;
-    const drop = Math.max(this.nextDownbeat(), this.nextDownbeat(this.roll.from + 1));
+    if (!this.roll || !this.roll.build || this.dropAt !== null) return;
+    if (this.ctx.currentTime - this.buildPressedAt < 0.35) return; // a tap: stay latched
+    this.dropSoon();
+  }
+  dropSoon() {
+    const drop = Math.max(this.nextBeat(), this.roll.from + 4); // at least one beat of build
     this.roll.until = drop;
     this.dropAt = drop;
+  }
+  // Waiting for a second tap to drop (for the display).
+  get latched() {
+    return !!(this.roll && this.roll.build && this.dropAt === null);
   }
 
   // Move the morph by one instrument: to the next (dir = 1) or previous (-1) hand-over.
@@ -165,6 +182,7 @@ class Groove {
     const hidden = typeof document !== "undefined" && document.hidden;
     const horizon = this.ctx.currentTime + (hidden ? 1.5 : 0.15);
     while (this.nextStep < horizon) {
+      if (this.dropAt === this.abs) this.step = 0; // the drop starts a new bar
       this.playStep(this.step, this.nextStep);
       this.nextStep += 60 / this.bpm / 4; // one sixteenth note
       this.step = (this.step + 1) % 16;
