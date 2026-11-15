@@ -4,13 +4,15 @@
 //
 //   Synth "pad"   ─┐
 //   Synth "bass"  ─┼──> MasterBus (limiter → analyser) ──> speakers
-//   Synth "bells" ─┘
+//   Synth "bells" ─┘        ^
+//        └── reverb send ──> Reverb (one room shared by all, see reverb.js)
 //
 // Notes can be played now (keyboard) or scheduled at a precise future time `t`
 // (in AudioContext seconds): that is what the generator will do.
 
 class Synth {
-  constructor(ctx, params, destination) {
+  // `send` (optional) is where the reverb send goes: the MasterBus's `send`.
+  constructor(ctx, params, destination, send) {
     this.ctx = ctx;
     this.params = params;
     this.maxVoices = 8;
@@ -24,7 +26,14 @@ class Synth {
     this.volume.gain.value = params.volume;
     this.input.connect(this.volume);
     this.volume.connect(destination);
-    // Later steps (effects) will be inserted between `input` and `volume`.
+    // Later steps (insert effects) will go between `input` and `volume`.
+
+    // Reverb send, taken after the volume ("post-fader", like in Ableton): turning the
+    // instrument down also turns its echo down.
+    this.reverbSend = ctx.createGain();
+    this.reverbSend.gain.value = params["fx.reverb"] ?? 0;
+    this.volume.connect(this.reverbSend);
+    if (send) this.reverbSend.connect(send);
 
     this.noiseBuffers = makeNoiseBuffers(ctx);
     // LFOs belong to the instrument, not to a note: all voices move together.
@@ -80,6 +89,7 @@ class Synth {
 
   applyAll() {
     setParam(this.ctx, this.volume.gain, this.params.volume, true);
+    setParam(this.ctx, this.reverbSend.gain, this.params["fx.reverb"] ?? 0, true);
     this.applyLfos();
     for (const v of this.voices) v.update(this.params, true);
   }
@@ -101,6 +111,11 @@ class MasterBus {
     this.limiter.ratio.value = 12;
     this.limiter.attack.value = 0.003;
     this.limiter.release.value = 0.25;
+
+    // One reverb for every instrument: each Synth sends some of itself to `send`.
+    this.reverb = new Reverb(ctx);
+    this.send = this.reverb.input;
+    this.reverb.output.connect(this.limiter);
 
     // The analyser does not change the sound: it lets the page draw it.
     this.analyser = ctx.createAnalyser();

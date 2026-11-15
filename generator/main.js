@@ -16,7 +16,7 @@ const ROLES = [
 // The volume is the generator's own mix, not part of the sound.
 const synths = {};
 for (const r of ROLES) {
-  synths[r.id] = new Synth(ctx, { ...currentPatch(r.patch), volume: r.volume }, master.input);
+  synths[r.id] = new Synth(ctx, { ...currentPatch(r.patch), volume: r.volume }, master.input, master.send);
 }
 
 // The synth page is open in another tab and a sound changed: apply it right away.
@@ -98,6 +98,17 @@ function applyDensity() {
 }
 density.addEventListener("input", applyDensity);
 applyDensity();
+
+// ---- Space ----
+
+const room = $("room");
+function applyRoom() {
+  master.reverb.setSize(Number(room.value));
+  $("room-out").textContent = room.value + " s";
+}
+room.addEventListener("change", applyRoom); // on release: each change builds a new room
+room.addEventListener("input", () => { $("room-out").textContent = room.value + " s"; });
+applyRoom();
 
 // ---- Display: chord name and piano roll ----
 

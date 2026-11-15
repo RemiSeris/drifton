@@ -93,6 +93,7 @@ Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `ind
 | `lfo.js` | LFO : formes classiques + Drift (aléatoire lisse, ne se répète jamais) + S&H |
 | `osc.js` | couche d'oscillateur avec unisson (désaccord + stéréo, phase aléatoire) |
 | `voice.js` | une note : 2 oscillateurs + bruit → filtre → ampli → trémolo → pan, 2 enveloppes, branchements de la matrice de modulation |
+| `reverb.js` | réverbe à convolution partagée : réponse impulsionnelle calculée, pré-délai, coupe-bas, changement de taille en fondu |
 | `synth.js` | `Synth` = un instrument (patch, 8 voix, LFO, volume), instanciable plusieurs fois ; notes jouables maintenant ou programmées à un temps `t` ; `MasterBus` commun (limiteur, analyseur) ; buffers de bruit |
 | `storage.js` | sauvegarde des sons dans le navigateur, partagée entre les pages ; nettoyage des valeurs importées |
 | `patches.js` | sons de départ des 4 instruments (Pad, Bass, Bells, Texture), en différences par rapport aux défauts |
@@ -106,6 +107,7 @@ Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `ind
 - [x] **1. La voix** : 2 oscillateurs (sinus, triangle, dent de scie, carré) avec unisson, filtre (LP/HP/BP/notch, résonance), enveloppe de filtre, enveloppe d'ampli, polyphonie, clavier, oscilloscope et spectre.
 - [x] **2. La modulation** : 2 LFO (sinus, tri, scie, carré, Drift, S&H), matrice de 4 slots (cutoff, pitch, detune d'unisson, volume, pan), source de bruit (blanc, rose, brun). Synth instanciable plusieurs fois + notes programmées dans le temps (prépare la génération).
 - [ ] **3. Les effets**, un fichier chacun : saturation (WaveShaper), chorus (delay court modulé), delay (avec feedback), réverbe (convolution puis réseau de delays type Freeverb). Éventuellement phaser.
+  - [x] **Réverbe** (`synth/reverb.js`) : une seule salle partagée, sur le `MasterBus` (comme une piste de retour dans Ableton) ; chaque instrument y envoie une part de lui-même (paramètre de patch `fx.reverb`, envoi post-volume). Réponse impulsionnelle calculée (bruit qui décroît de 60 dB sur la durée choisie, de plus en plus sombre, différent à gauche et à droite), pré-délai de 30 ms, coupe-bas à 180 Hz dans la queue. Taille réglable sur la page Focus music (1–12 s), avec fondu enchaîné vers la nouvelle salle.
 - [x] **4. Les patchs** : sauvegarde automatique de chaque instrument dans le navigateur (`localStorage`, `synth/storage.js`), lue par le générateur au démarrage et en direct si la page synthé est ouverte dans un autre onglet (événement `storage`) ; Reset = retour au son de départ ; export / import d'un son en fichier JSON (valeurs nettoyées et bornées) ; boutons « Edit » dans le générateur qui ouvrent l'instrument sur la page synthé (`synth/index.html#Bells`).
 
 ### Musique
@@ -182,6 +184,8 @@ Usage visé : s'entraîner au piano sur iPad (Safari).
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Réverbe (premier effet de l'étape 3) : salle partagée sur le `MasterBus`, envoi par instrument (`fx.reverb`, groupe « Effects » du synthé ; Pad 45 %, Bass 10 %, Bells 65 %, Texture 50 %), taille sur la page Focus music. Testée par rendu hors ligne : la queue d'une cloche passe d'environ 3 s à 6–8 s, l'image stéréo s'élargit (corrélation G/D 0,89 → 0,47 sur une phrase), pas de saturation.
 
 - **2026-11-14** — Positionnement : Drifton devient une collection de petits outils autour du son. Accueil refait, rangé par intention, avec des illustrations SVG ; le générateur s'affiche « Focus music ». Notés pour plus tard : PWA, statistiques sans cookies, dons. Lecteur piano : main gauche en pourpre foncé, plus sombre que la droite (graves).
 

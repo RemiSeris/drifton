@@ -151,6 +151,13 @@ const PARAM_GROUPS = [
     ]),
   },
   {
+    title: "Effects",
+    help: "Reverb: how much of this instrument goes into the room. The room is shared by every instrument; its size is set on the Focus music page.",
+    params: [
+      { key: "fx.reverb", label: "Reverb", min: 0, max: 1, step: 0.01, value: 0.3, unit: "%" },
+    ],
+  },
+  {
     title: "Output",
     params: [
       { key: "volume", label: "Volume", min: 0, max: 1, step: 0.01, value: 0.7, unit: "%" },

@@ -9,7 +9,7 @@ const ctx = new AudioContext();
 const master = new MasterBus(ctx);
 const instruments = Object.keys(STARTER_PATCHES).map((name) => ({
   name,
-  synth: new Synth(ctx, currentPatch(name), master.input),
+  synth: new Synth(ctx, currentPatch(name), master.input, master.send),
 }));
 let current = instruments[0];
 
