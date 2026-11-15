@@ -20,6 +20,8 @@
 //   mode       scale used for the chords (see generator/harmony.js)
 //   bassGate / keysGate  note length in seconds (short = staccato)
 //   space      reverb send per lane (hats stay dry: in the room they turn to hiss)
+//   echo       echo send per lane, and echoBeats: echo time in beats (0.75 = dotted 8th)
+//   kit        (optional) a different sound for a lane, e.g. { snare: "rim" }
 
 const GROOVE_STYLES = {
   funk: {
@@ -27,6 +29,7 @@ const GROOVE_STYLES = {
     bpm: 98, swing: 0.14, chordBars: 4, mode: "dorian",
     bassGate: 0.13, keysGate: 0.09,
     space: { kick: 0, snare: 0.1, hat: 0, perc: 0.15, bass: 0, keys: 0.2 },
+    echo: { kick: 0, snare: 0, hat: 0, perc: 0, bass: 0, keys: 0 }, echoBeats: 0.75,
     lanes: {
       //      "1e&a2e&a3e&a4e&a"
       kick:  { p: "X..4..7.X.3...5.", v: "9..6..8.8.5...6." },
@@ -41,12 +44,16 @@ const GROOVE_STYLES = {
   dub: {
     name: "Dub",
     bpm: 74, swing: 0.06, chordBars: 2, mode: "aeolian",
+    kit: { snare: "rim" }, // one drop is played on the rim (cross-stick), not the skin
     bassGate: 0.5, keysGate: 0.14,
-    space: { kick: 0, snare: 0.45, hat: 0, perc: 0.4, bass: 0, keys: 0.45 },
+    // Dub's space is an echo, not a big room: a snare in a reverb turns into a hiss,
+    // a snare in an echo stays a snare, repeated and melting away.
+    space: { kick: 0, snare: 0.1, hat: 0, perc: 0.08, bass: 0, keys: 0.25 },
+    echo: { kick: 0, snare: 0.55, hat: 0, perc: 0.4, bass: 0, keys: 0.35 }, echoBeats: 0.75,
     lanes: {
       //      "1e&a2e&a3e&a4e&a"
       kick:  { p: "........X.......", v: "........9......." }, // "one drop": nothing on 1
-      snare: { p: "........X.......", v: "........8......." },
+      snare: { p: "........X.......", v: "........8......." }, // rim, with the kick
       hat:   { p: "..6...6...6...6.", v: "..4...4...4...4." },
       perc:  { p: ".............3..", v: ".............5.." },
       bass:  { p: "X.....6.X..5..4.", v: "9.....7.8..6..6.", n: "R.....5.8..R..5." },
@@ -59,6 +66,7 @@ const GROOVE_STYLES = {
     bpm: 70, swing: 0, chordBars: 2, mode: "ionian",
     bassGate: 0.35, keysGate: 0.22,
     space: { kick: 0, snare: 0, hat: 0, perc: 0.15, bass: 0, keys: 0.3 },
+    echo: { kick: 0, snare: 0, hat: 0, perc: 0, bass: 0, keys: 0 }, echoBeats: 0.75,
     lanes: {
       //      "1e&a2e&a3e&a4e&a"
       kick:  { p: "X..4..6.X..4..6.", v: "6..4..5.6..4..5." },

@@ -4,6 +4,8 @@
 // dub, a step that funk plays 70% of the time and dub never plays is played 35% of the
 // time. Velocity, swing, tempo, note length and reverb sends are blended the same way.
 //
+// Space: each lane sends to the shared reverb and, for dub, to an echo (see echo.js).
+//
 // Chords come from the same Harmony as Focus music. The bass picks chord notes as the
 // style asks (root, fifth, octave…) and, at the end of a chord, sometimes slides into
 // the next root from a semitone away (a "chromatic approach", very funk, very jazz).
@@ -33,6 +35,8 @@ class Groove {
     this.hits = [];   // log for the display: { lane, step, t, v }
     this.steps = [];  // { step, t }: when each step starts (for the playhead)
     this.onBar = null; // callback for the page
+    this.echo = null;     // optional Echo, with one send per synth: { bass, keys }
+    this.synthEcho = {};
   }
 
   start() {
@@ -119,6 +123,13 @@ class Groove {
     if (this.followTempo) this.bpm = this.blend((s) => s.bpm);
     for (const lane of DRUM_LANES) this.drums.setSend(lane, this.blend((s) => s.space[lane]));
     for (const lane of ["bass", "keys"]) this.synths[lane].set("fx.reverb", this.blend((s) => s.space[lane]));
+    if (this.echo) {
+      this.echo.setBeats(this.nearest().echoBeats, this.bpm);
+      for (const lane of DRUM_LANES) this.drums.setEcho(lane, this.blend((s) => s.echo[lane]));
+      for (const lane of ["bass", "keys"]) {
+        setParam(this.ctx, this.synthEcho[lane].gain, this.blend((s) => s.echo[lane]), true);
+      }
+    }
     this.bar++;
     if (this.onBar) this.onBar(t);
   }
@@ -140,7 +151,7 @@ class Groove {
   // ---- Playing one hit ----
 
   fire(lane, i, t, v, style) {
-    if (DRUM_LANES.includes(lane)) return this.drums.play(lane, t, v);
+    if (DRUM_LANES.includes(lane)) return this.drums.play(lane, t, v, style.kit && style.kit[lane]);
     if (lane === "bass") return this.bassNote(i, t, v, style);
     if (lane === "keys") return this.keysChord(t, v);
   }

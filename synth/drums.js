@@ -2,8 +2,8 @@
 //
 //   kick ─┐
 //   snare ┼──> each lane's gain ──> output ──> MasterBus
-//   hat ──┤           └──> reverb send (per lane: a dub snare lives in the room,
-//   perc ─┘                              a kick stays dry)
+//   hat ──┤           ├──> reverb send (per lane)
+//   perc ─┘           └──> echo send   (per lane, optional: the dub snare)
 //
 // Every hit builds a few short-lived nodes, plays, and throws them away, like a Voice.
 // - kick:  a sine whose pitch falls fast (160 → 48 Hz): the drop IS the thump,
@@ -13,6 +13,8 @@
 //          harmonics clash into a metallic shimmer, then only the top is kept. Much
 //          tighter and less "hissy" than plain white noise, which sounds like a wash.
 // - perc:  a short high sine, like a clave or a rim click
+// - rim:   a variant of the snare lane (dub's cross-stick): a short wooden knock,
+//          almost no noise, so it never hisses even in a slow, sparse groove
 
 const DRUM_LANES = ["kick", "snare", "hat", "perc"];
 
@@ -25,7 +27,8 @@ const HAT_FREQS = [205.3, 304.4, 369.6, 522.7, 540, 800];
 const HAT_GAIN = 1;
 
 class Drums {
-  constructor(ctx, destination, send) {
+  // `send`: the reverb input; `echo` (optional): an echo input (see echo.js).
+  constructor(ctx, destination, send, echo) {
     this.ctx = ctx;
     this.noise = makeNoiseBuffers(ctx).white;
     this.output = ctx.createGain();
@@ -40,7 +43,11 @@ class Drums {
       gain.connect(this.output);
       gain.connect(sendGain);
       if (send) sendGain.connect(send);
-      this.lanes[name] = { gain, sendGain };
+      const echoGain = ctx.createGain();
+      echoGain.gain.value = 0;
+      gain.connect(echoGain);
+      if (echo) echoGain.connect(echo);
+      this.lanes[name] = { gain, sendGain, echoGain };
     }
   }
 
@@ -48,13 +55,19 @@ class Drums {
     setParam(this.ctx, this.lanes[name].sendGain.gain, value, true);
   }
 
+  setEcho(name, value) {
+    setParam(this.ctx, this.lanes[name].echoGain.gain, value, true);
+  }
+
   setOn(name, on) {
     setParam(this.ctx, this.lanes[name].gain.gain, on ? DRUM_LEVELS[name] : 0, true);
   }
 
-  play(name, t, velocity) {
+  // `sound` (optional) picks a variant for the lane, e.g. "rim" on the snare lane.
+  play(name, t, velocity, sound) {
     const out = this.lanes[name].gain;
     if (name === "kick") this.kick(t, velocity, out);
+    else if (name === "snare" && sound === "rim") this.rim(t, velocity, out);
     else if (name === "snare") this.snare(t, velocity, out);
     else if (name === "hat") this.hat(t, velocity, out, velocity > 0.85);
     else this.perc(t, velocity, out);
@@ -77,6 +90,16 @@ class Drums {
       osc.frequency.exponentialRampToValueAtTime(f * 0.8, t + 0.06);
       this.hit(osc, [], out, t, v * level, 0.001, 0.08);
     }
+  }
+
+  rim(t, v, out) {
+    for (const [type, f, level, decay] of [["triangle", 420, 0.9, 0.05], ["sine", 1750, 0.5, 0.025]]) {
+      const osc = this.ctx.createOscillator();
+      osc.type = type;
+      osc.frequency.value = f;
+      this.hit(osc, [], out, t, v * level, 0.0005, decay);
+    }
+    this.noiseHit("bandpass", 3000, out, t, v * 0.25, 0.01); // the click of the stick
   }
 
   hat(t, v, out, open) {

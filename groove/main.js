@@ -23,13 +23,27 @@ const KEYS_PATCH = {
   volume: 0.5,
 };
 
-const drums = new Drums(ctx, master.input, master.send);
+// A tape echo for dub, next to the shared reverb.
+const echo = new Echo(ctx);
+echo.output.connect(master.input);
+
+const drums = new Drums(ctx, master.input, master.send, echo.input);
 const synths = {
   bass: new Synth(ctx, BASS_PATCH, master.input, master.send),
   keys: new Synth(ctx, KEYS_PATCH, master.input, master.send),
 };
 const harmony = new Harmony(2, "dorian");
 const groove = new Groove(ctx, drums, synths, harmony);
+
+// Echo sends for the two synths, taken after their volume (like their reverb send).
+groove.echo = echo;
+for (const lane of ["bass", "keys"]) {
+  const g = ctx.createGain();
+  g.gain.value = 0;
+  synths[lane].volume.connect(g);
+  g.connect(echo.input);
+  groove.synthEcho[lane] = g;
+}
 
 const $ = (id) => document.getElementById(id);
 const css = getComputedStyle(document.documentElement);

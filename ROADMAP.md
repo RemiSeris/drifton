@@ -198,7 +198,13 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 - **Batterie** (`synth/drums.js`) : kick (sinus qui tombe de 160 à 48 Hz + clic), snare
   (bruit en passe-bande + deux triangles), hat façon TR-808 (six carrés désaccordés, filtrés
   vers 7–12 kHz ; ouvert si vélocité forte), perc (clave). Les hats restent secs : en bruit
-  blanc et dans la réverbe, ils sonnaient comme une cymbale qui traîne.
+  blanc et dans la réverbe, ils sonnaient comme une cymbale qui traîne. Un style peut
+  changer le son d'une piste (`kit`) : le dub joue sa caisse claire en rimshot (coup de
+  bois, sans bruit).
+- **Écho** (`synth/echo.js`, premier pas vers le delay de l'étape 3) : écho à bande, temps en
+  temps musicaux (croche pointée), répétitions de plus en plus sourdes. L'espace du dub
+  passe par l'écho et non par la réverbe : une frappe dans une réverbe de bruit devient un
+  souffle, une frappe dans un écho reste une frappe.
 - Ordonnanceur plus serré que le générateur (25 ms / 150 ms d'avance) pour réagir vite au
   curseur ; avance allongée quand l'onglet est caché.
 - Pistes : d'autres styles (house, afrobeat en 12/8, trip-hop…), un éditeur de grille à la
@@ -209,6 +215,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Dub : le souffle venait de la caisse claire, seule une fois par mesure à 74 bpm, envoyée dans la réverbe. Rimshot à la place (part au-dessus de 3 kHz : −8,6 → −32,5 dB) et écho à bande (`synth/echo.js`) au lieu de la réverbe. Funk inchangé.
 
 - **2026-11-15** — Batterie du Groove resserrée : hat en bruit blanc (63 % de l'énergie au-dessus de 12 kHz, effet « cymbale ») remplacé par un hat métallique façon 808, centré vers 9 kHz ; snare en passe-bande ; plus de réverbe sur les hats ni le kick ; mixage par piste ; la réverbe partagée coupe les aigus au-dessus de 5 kHz.
 
