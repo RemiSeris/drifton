@@ -16,6 +16,6 @@ Lire **`ROADMAP.md`** en début de session : vision, décisions prises, architec
   (même moteur, même design), chacun utilisable seul avec sa propre adresse.
   `index.html` (racine) est l'accueil, rangé par intention : Listen (`generator/` = « Focus
   music », `player/` = « Drone »), Play & learn (`score/`, bientôt `chords/`), Make
-  (`synth/`), Lab (`pads/`). Une illustration SVG plate et arrondie par outil, dans la
+  (`synth/`), Lab (`pads/`, `groove/`). Une illustration SVG plate et arrondie par outil, dans la
   palette du site. Styles partagés dans `common.css`.
 - Ne commiter que sur demande.

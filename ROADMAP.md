@@ -81,6 +81,7 @@ valeur de ces paramètres au moment du clic.
 | `pads/` | prototype « nappe en 3 états » : crossfade d'exports audio piloté par un conducteur, couche granulaire, modulation d'amplitude. Exploration, a mené aux décisions ci-dessus |
 | `synth/` | synthé maison, construit brique par brique (voir étapes) |
 | `generator/` | générateur : 4 instruments du synthé joués par des règles. `harmony.js` (modes, accords par empilement de tierces, chaîne de Markov, voice leading), `generator.js` (rôles pad / basse / cloches / texture, ordonnanceur à anticipation), `main.js` (page, piano roll). Réutilise les fichiers de `synth/` |
+| `groove/` | « Groove » (Lab) : styles rythmiques (funk, dub, bossa nova) écrits en grilles de probabilités sur 16 pas, mélangés par un curseur A ↔ B. Batterie synthétisée (`synth/drums.js`), basse et accords sur `generator/harmony.js`. Voir « Groove » plus bas |
 | `score/` | lecteur de partition MIDI pour s'entraîner au piano (v1, voir « Autres axes ») |
 
 Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `index.html`) :
@@ -179,11 +180,35 @@ Usage visé : s'entraîner au piano sur iPad (Safari).
 - [ ] **Vue guitare** : notes placées sur le manche / tablature qui défile.
 - Design original (pas de copie d'un logiciel existant).
 
+## Groove (`groove/`)
+
+À part de la musique fonctionnelle, volontairement : un rythme marqué attire l'attention,
+donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
+
+- **Un style = une grille lisible** (`groove/styles.js`) : par piste (kick, snare, hat,
+  perc, bass, keys), 16 caractères de probabilité (`.` jamais, `1`–`9` 10–90 %, `X`
+  toujours) et 16 de vélocité ; la basse a en plus la note à jouer (`R`, `3`, `5`, `7`,
+  `8`). Plus : tempo, swing, mesures par accord, mode, longueur des notes, envois réverbe.
+  Chaque mesure est tirée de nouveau dans la grille : reconnaissable, jamais identique.
+- **Morph** : deux styles A et B, un curseur. Les probabilités, vélocités, swing, tempo,
+  longueurs et envois sont interpolés ; le mode suit le style le plus proche, au
+  changement d'accord. Auto morph : 1/16 par mesure, aller-retour.
+- **Basse** : notes de l'accord en cours ; dans la dernière mesure d'un accord, une fois sur
+  deux, approche chromatique (un demi-ton) vers la fondamentale suivante.
+- **Batterie** (`synth/drums.js`) : kick (sinus qui tombe de 160 à 48 Hz + clic), snare
+  (bruit filtré + triangle), hat (bruit très aigu, ouvert si vélocité forte), perc (clave).
+- Ordonnanceur plus serré que le générateur (25 ms / 150 ms d'avance) pour réagir vite au
+  curseur ; avance allongée quand l'onglet est caché.
+- Pistes : d'autres styles (house, afrobeat en 12/8, trip-hop…), un éditeur de grille à la
+  souris, le LLM de l'étape 7b qui bouge le curseur (« plus funky »).
+
 ## En ligne
 
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Groove (Lab) : styles rythmiques en grilles de probabilités (funk, dub, bossa nova), morph A ↔ B (tempo compris), batterie synthétisée, basse avec approches chromatiques. Testé par rendu hors ligne de chaque style et d'un morph funk → dub, et dans Chrome (pas d'erreur, contrôles OK).
 
 - **2026-11-15** — Réverbe (premier effet de l'étape 3) : salle partagée sur le `MasterBus`, envoi par instrument (`fx.reverb`, groupe « Effects » du synthé ; Pad 45 %, Bass 10 %, Bells 65 %, Texture 50 %), taille sur la page Focus music. Testée par rendu hors ligne : la queue d'une cloche passe d'environ 3 s à 6–8 s, l'image stéréo s'élargit (corrélation G/D 0,89 → 0,47 sur une phrase), pas de saturation.
 

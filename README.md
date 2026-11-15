@@ -19,6 +19,7 @@ works on its own by double-clicking its `index.html`.
 | Synth | `synth/` | The home-made synth: play the instruments from the keyboard and shape their sound |
 | Drone | `player/` | The original version: generative drone with Focus / Relax / Deep presets |
 | Pad states | `pads/` | Early prototype: one pad in three states crossfaded by a conductor, granular layer, amplitude modulation |
+| Groove | `groove/` | Rhythm styles (funk, dub, bossa nova) as grids of chances, with a morph slider between two styles |
 | Piano score | `score/` | Open a `.mid` file and practice: falling notes on a keyboard, speed, loop on bars, see / hear each hand |
 
 `common.css` holds the styles shared by the home page, the synth, the generator and

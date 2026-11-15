@@ -1,0 +1,24 @@
+/* Groove page: extends ../common.css */
+
+:root {
+  --c-kick: #f2b56d;
+  --c-snare: #5ec4f2;
+  --c-hat: #c4bdff;
+  --c-perc: #f2c46d;
+  --c-bass: #4fb8a8;
+  --c-keys: #8a7fff;
+}
+
+.chord { font-size: 1.6rem; font-weight: 500; letter-spacing: 0.02em; }
+.chord small { font-size: 0.9rem; color: var(--muted); margin-left: 0.4rem; }
+
+canvas#grid { height: 210px; }
+
+.morph b { font-weight: 500; color: var(--fg); font-size: 0.85rem; white-space: nowrap; }
+.morph input[type=range] { flex: 1; }
+
+.lanes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem 1rem; }
+.lane { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.lane .dot { width: 10px; height: 10px; border-radius: 3px; background: var(--c); flex: none; }
+
+code { font-size: 0.85em; color: var(--fg); }
