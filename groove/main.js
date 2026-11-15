@@ -52,9 +52,37 @@ const LEAD_PATCH = {
   "mod1.src": "lfo1", "mod1.dst": "pitch", "mod1.amount": 0.06,
   "mod2.src": "off", "mod3.src": "off",
   "fx.reverb": 0.3,
-  volume: 0.55,
+  volume: 0.45,
+};
+// The lead changes sound with the style playing the beat, as a band would change
+// instrument: a clavinet-like pluck for funk, a melodica for dub, a soft flute for bossa.
+const LEAD_SOUNDS = {
+  Funk: {
+    "a.wave": "square", "a.unison": 1, "a.level": 0.4, "b.wave": "sawtooth", "b.level": 0.15,
+    "filter.cutoff": 1300, "filter.res": 0.35, "filter.env": 2.4, "fenv.decay": 0.14, "fenv.sustain": 0.15,
+    "amp.attack": 0.003, "amp.decay": 0.2, "amp.sustain": 0.35, "amp.release": 0.08, "mod1.amount": 0,
+  },
+  Dub: {
+    "a.wave": "sawtooth", "a.unison": 1, "a.level": 0.35, "b.wave": "square", "b.level": 0.3,
+    "filter.cutoff": 1500, "filter.res": 0.15, "filter.env": 0.6, "fenv.decay": 0.4, "fenv.sustain": 0.6,
+    "amp.attack": 0.02, "amp.decay": 0.3, "amp.sustain": 0.8, "amp.release": 0.2, "mod1.amount": 0.015,
+  },
+  "Bossa nova": {
+    "a.wave": "triangle", "a.unison": 1, "a.level": 0.6, "b.wave": "sine", "b.level": 0.25,
+    "filter.cutoff": 2600, "filter.res": 0.1, "filter.env": 0.3, "fenv.sustain": 0.6,
+    "amp.attack": 0.035, "amp.decay": 0.3, "amp.sustain": 0.75, "amp.release": 0.3, "mod1.amount": 0.025,
+  },
 };
 const lead = new Synth(ctx, LEAD_PATCH, master.input, master.send);
+let leadSound = "";
+function applyLeadSound(name) {
+  if (name === leadSound) return;
+  leadSound = name;
+  const volume = lead.params.volume; // keep the user's melody volume
+  Object.assign(lead.params, LEAD_PATCH, LEAD_SOUNDS[name] || {}, { volume });
+  lead.applyAll();
+}
+applyLeadSound(groove.core.name);
 const melody = new Melody(ctx, lead, harmony);
 const composer = new Composer(groove, harmony, melody);
 groove.onStep = (i, abs, t, sixteenth) => composer.onStep(i, abs, t, sixteenth);
@@ -63,7 +91,10 @@ const leadEcho = ctx.createGain();
 leadEcho.gain.value = 0;
 lead.volume.connect(leadEcho);
 leadEcho.connect(echo.input);
-groove.onBar = () => setParam(ctx, leadEcho.gain, groove.owners.keys.echo.keys * 0.8, true);
+groove.onBar = () => {
+  setParam(ctx, leadEcho.gain, groove.owners.keys.echo.keys * 0.8, true);
+  applyLeadSound(groove.core.name);
+};
 
 groove.filter = djf;
 

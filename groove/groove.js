@@ -250,7 +250,8 @@ class Groove {
     if (!this.harmony.usable(this.degree)) this.degree = 0;
     this.tones = this.harmony.chordTones(this.degree);
     this.chordName = this.harmony.chordName(this.degree);
-    this.keysVoicing = voiceLead(this.keysVoicing, this.tones, 55, 74, 4);
+    // Chords stay below MIDI 67, so the melody has the space above them to itself.
+    this.keysVoicing = voiceLead(this.keysVoicing, this.tones, 50, 67, 4);
     // Decide the next chord now, so the bass knows where to slide to.
     this.nextDegree = this.harmony.nextDegree(this.degree);
     this.barsInChord = 0;

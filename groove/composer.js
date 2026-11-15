@@ -1,30 +1,66 @@
-// Composer: writes a melody for the groove, one bar ahead, on the keys of the melody rows.
+// Composer: writes a melody that fits the groove, one bar ahead, on the melody keys.
 //
-// It thinks in 4-bar phrases, the way a lot of songs do:
-//   bar 1  a motif (a rhythm + a little shape)
-//   bar 2  the same rhythm, the shape moved a little (or repeated): the ear recognises it
-//   bar 3  an answer: a new rhythm
-//   bar 4  the cadence: fewer notes, ending long on a note of the chord
+// What makes a melody fit (and what this file does about each):
+// - It lands on the chord. Notes on strong beats and long notes are always notes of the
+//   chord playing then. In between, short passing notes come from the pentatonic (the
+//   5 notes of the scale with no half steps), never a semitone above a chord note: that
+//   is the one interval that grates when held.
+// - It has its own space. It sits above the chords (MIDI 66–84, the keys play below 67)
+//   and it breathes: the rhythms have rests.
+// - It speaks the style. Rhythms come from small hand-written phrase shapes per style:
+//   funk = short syncopated stabs, dub = long melodica notes off the beat, bossa = long
+//   tied notes that sway. The lead's sound changes with the style too (see main.js).
+// - It repeats, so the ear can follow. 4-bar phrases: A, A again (same rhythm, same
+//   shape moved onto the new chord), B (an answer), and a cadence that ends long on
+//   the root.
 //
-// Rhythm: where notes may start depends on the style playing the beat (FEEL below,
-// written like the drum grids: one character per sixteenth, . = never, 1..9 = weight).
-// Funk: busy and syncopated. Dub: few notes, long, off the beat. Bossa: swaying eighths.
-//
-// Pitch: a walk on the scale, mostly by steps, sometimes a leap (then it turns back,
-// as singers do). On strong beats it prefers the notes of the chord playing then, so the
-// melody "lands". Notes are positions on the keyboard rows (step 0 = root on the middle
-// row), so the same plan can be played by the computer (Auto) or shown to you (Guide).
+// Rhythm shapes: one character per sixteenth, x = a note starts, - = it holds,
+// . = silence. Notes are positions on the keyboard rows (scale steps), so the same plan
+// can be played by the computer (Auto) or shown to you (Guide).
 //
 // Each note: { abs, len, step, code, t, end, judged } — abs = step index on the groove
 // clock, len in sixteenths, t / end = audio times (estimated, then exact when it comes).
 
-const FEEL = {
-  Funk:         { grid: "8.36.5.47.36.5.4", notes: [4, 6], maxLen: 3 },
-  Dub:          { grid: "5...3.6...4...6.", notes: [2, 3], maxLen: 8 },
-  "Bossa nova": { grid: "7..5..6.4..6..5.", notes: [3, 5], maxLen: 4 },
+const PHRASES = {
+  Funk: {
+    motifs: ["x.x...x...x.x...", "..x.x...x.x...x.", "x..x..x...x-x...", "...x.x..x...x.x."],
+    cadences: ["x.x...x---------", "..x.x...x-------"],
+  },
+  Dub: {
+    motifs: ["....x---....x---", "..x-----......x-", "x-------..x-x---", "....x-x-....x---"],
+    cadences: ["....x-----------", "x-------........"],
+  },
+  "Bossa nova": {
+    motifs: ["x-.x--x-........", "..x--x--x---....", "x---..x-x--x....", "....x-x--x--x---"],
+    cadences: ["x--x--x---------", "..x--x--x-------"],
+    sevenths: true, // bossa melodies love the 7th of the chord
+  },
 };
-const FEEL_DEFAULT = FEEL.Funk;
-const TOP_STEP = 12; // highest scale step used (the top row goes higher, for you)
+const MELODY_RANGE = [66, 84]; // MIDI: above the keys, below shrill
+// Pentatonic = these scale steps (0-based) of each mode: no half steps between them.
+const PENTA = {
+  ionian: [0, 1, 2, 4, 5], lydian: [0, 1, 2, 4, 5], mixolydian: [0, 1, 2, 4, 5],
+  dorian: [0, 2, 3, 4, 6], aeolian: [0, 2, 3, 4, 6], phrygian: [0, 2, 3, 4, 6],
+};
+
+// "x.x-" → [{ o: 0, len: 1 }, { o: 2, len: 2 }]
+function parsePhrase(shape) {
+  if (shape.length !== 16) throw new Error(`Melody shape "${shape}" has ${shape.length} steps instead of 16`);
+  const out = [];
+  for (let i = 0; i < 16; i++) {
+    if (shape[i] !== "x") continue;
+    let len = 1;
+    while (i + len < 16 && shape[i + len] === "-") len++;
+    out.push({ o: i, len });
+  }
+  return out;
+}
+for (const p of Object.values(PHRASES)) {
+  p.motifs = p.motifs.map(parsePhrase);
+  p.cadences = p.cadences.map(parsePhrase);
+}
+
+const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 class Composer {
   constructor(groove, harmony, melody) {
@@ -33,10 +69,7 @@ class Composer {
     this.melody = melody;
     this.mode = "free";  // "free" | "guide" | "auto"
     this.notes = [];     // planned and recent notes
-    this.cur = 2;        // current scale step of the walk
-    this.motif = null;   // { onsets, steps } of the phrase's first bar
-    this.bars = 0;       // bars seen since the start (a drop can restart a bar early)
-    this.answer = null;
+    this.reset();
     // Guide game.
     this.streak = 0; this.best = 0; this.hits = 0; this.judgedCount = 0;
     this.feedback = [];  // { text, midi, t } for the stage
@@ -44,8 +77,8 @@ class Composer {
 
   reset() {
     this.notes = [];
-    this.motif = this.answer = null;
-    this.cur = 2;
+    this.phrase = null;  // { a, b, cadence, aSteps } for the 4 bars being written
+    this.prev = null;    // last scale step written
     this.bars = 0;
     this.lastBarAbs = undefined;
   }
@@ -54,12 +87,11 @@ class Composer {
   onStep(i, abs, t, sixteenth) {
     if (this.mode === "free") return;
     this.sixteenth = sixteenth;
-    this.clock = { abs, t };
     // At each downbeat, write the bar after this one. A bar that starts early (a drop)
-    // makes the notes planned on the old grid fall off the beat: forget them.
+    // leaves the notes planned on the old grid off the beat: forget them.
     if (i === 0) {
       if (this.lastBarAbs !== undefined && abs !== this.lastBarAbs + 16) {
-        this.notes = this.notes.filter((n) => n.end !== undefined); // unplayed plans are off-grid now
+        this.notes = this.notes.filter((n) => n.end !== undefined);
       }
       this.lastBarAbs = abs;
       this.planBar(++this.bars, abs, t, sixteenth);
@@ -81,102 +113,100 @@ class Composer {
 
   planBar(bar, absNow, tNow, sixteenth) {
     const g = this.groove;
-    const feel = FEEL[g.core.name] || FEEL_DEFAULT;
-    const pos = (bar - 1) % 4; // place in the 4-bar phrase (bar 0 is left empty: count-in)
-    if (bar < 1) return;
+    const book = PHRASES[g.core.name] || PHRASES.Funk;
+    const pos = (bar - 1) % 4; // place in the 4-bar phrase
+    if (pos === 0 || !this.phrase) {
+      const a = pick(book.motifs);
+      let b = pick(book.motifs);
+      if (b === a && book.motifs.length > 1) b = book.motifs[(book.motifs.indexOf(a) + 1) % book.motifs.length];
+      this.phrase = { a, b, cadence: pick(book.cadences), aSteps: null };
+    }
+    const ph = this.phrase;
+    const rhythm = pos <= 1 ? ph.a : pos === 2 ? ph.b : ph.cadence;
+
     // The chord that will be playing in that bar.
     const changes = g.barsInChord + 1 >= g.core.chordBars;
     const degree = changes && g.nextDegree !== undefined ? g.nextDegree : g.degree;
-    const triad = this.harmony.chordTones(degree).slice(0, 3);
+    const tones = this.harmony.chordTones(degree);
+    const chord = book.sevenths ? tones.slice(0, 4) : tones.slice(0, 3);
+    const triad = tones.slice(0, 3);
 
-    let onsets, steps;
-    if (pos === 0 || !this.motif) {
-      onsets = this.rhythm(feel);
-      steps = this.walk(onsets, triad);
-      this.motif = { onsets, steps };
-    } else if (pos === 1) {
-      onsets = this.motif.onsets;
-      const shift = Math.random() < 0.4 ? 0 : Math.random() < 0.5 ? 1 : -1;
-      steps = this.motif.steps.map((s) => this.clamp(s + shift));
-      steps[steps.length - 1] = this.nearestChordStep(steps[steps.length - 1], triad);
-    } else if (pos === 2) {
-      onsets = this.rhythm(feel);
-      steps = this.walk(onsets, triad);
+    let steps;
+    if (pos === 1 && ph.aSteps) {
+      // Same rhythm, same shape: each note moves to the nearest fitting note of the new chord.
+      steps = rhythm.map((n, k) => this.nearest(ph.aSteps[k], this.allowed(n, chord, triad)));
     } else {
-      // Cadence: a short pickup, then a long note on the root of the chord.
-      const n = Math.max(1, Math.min(2, feel.notes[0] - 1));
-      onsets = this.rhythm(feel, n, 8);
-      steps = this.walk(onsets, triad);
-      steps[steps.length - 1] = this.nearestChordStep(steps[steps.length - 1], [triad[0]]);
+      steps = this.line(rhythm, chord, triad);
     }
-    if (!steps.length) return;
-    this.cur = steps[steps.length - 1];
+    if (pos === 0) ph.aSteps = steps;
+    if (pos === 3) {
+      // The cadence ends on the root of the chord.
+      const k = steps.length - 1;
+      steps[k] = this.nearest(steps[k], this.stepsWhere((pc) => pc === tones[0]));
+    }
+    if (steps.length) this.prev = steps[steps.length - 1];
 
-    // Turn onsets into notes: each lasts until the next one (with a ceiling).
     const start = absNow + 16;
-    onsets.forEach((o, k) => {
-      const next = k + 1 < onsets.length ? onsets[k + 1] : 16;
-      const len = pos === 3 && k === onsets.length - 1 ? 16 - o : Math.min(feel.maxLen, next - o);
-      const abs = start + o;
+    rhythm.forEach((n, k) => {
+      const abs = start + n.o;
       this.notes.push({
-        abs, len, step: steps[k], code: this.codeFor(steps[k]),
-        vel: o % 4 === 0 ? 0.85 : 0.65,
+        abs, len: n.len, step: steps[k], code: this.codeFor(steps[k]),
+        vel: n.o % 4 === 0 ? 0.85 : 0.68,
         t: tNow + (abs - absNow) * sixteenth, end: undefined, judged: null,
       });
     });
   }
 
-  // Pick n onsets in the bar, weighted by the feel's grid (from step `from` on).
-  rhythm(feel, n, from = 0) {
-    const w = [...feel.grid].map((c) => (c === "." ? 0 : Number(c)));
-    for (let i = 0; i < from; i++) w[i] = 0;
-    if (n === undefined) n = feel.notes[0] + Math.floor(Math.random() * (feel.notes[1] - feel.notes[0] + 1));
+  // Scale steps (0–16, the two rows) inside the melody range whose note passes `test`.
+  stepsWhere(test) {
     const out = [];
-    for (let k = 0; k < n; k++) {
-      const total = w.reduce((a, b) => a + b, 0);
-      if (total === 0) break;
-      let r = Math.random() * total, i = 0;
-      while (r >= w[i]) r -= w[i++];
-      out.push(i);
-      w[i] = 0;
-      if (i > 0) w[i - 1] *= 0.3; // no two notes glued together too often
-      if (i < 15) w[i + 1] *= 0.3;
+    for (let s = 0; s <= 16; s++) {
+      const midi = this.melody.noteFor(this.codeFor(s));
+      if (midi < MELODY_RANGE[0] || midi > MELODY_RANGE[1]) continue;
+      if (test(midi % 12, s)) out.push(s);
     }
-    return out.sort((a, b) => a - b);
+    return out;
   }
 
-  // A walk on the scale, one step per onset.
-  walk(onsets, triad) {
+  // Which steps a note may use: chord notes if it is on a beat or long, otherwise
+  // pentatonic passing notes too (but never a semitone above a chord note).
+  allowed(n, chord, triad) {
+    const strong = n.o % 4 === 0 || n.len >= 3;
+    const chordSteps = this.stepsWhere((pc) => (strong ? triad : chord).includes(pc));
+    if (strong) return chordSteps;
+    const penta = PENTA[this.harmony.mode] || PENTA.dorian;
+    const clash = (pc) => chord.some((c) => (pc - c + 12) % 12 === 1) && !chord.includes(pc);
+    const passing = this.stepsWhere((pc, s) => penta.includes(s % 7) && !clash(pc));
+    return [...new Set([...chordSteps, ...passing])];
+  }
+
+  // A line through the rhythm: mostly steps, sometimes a leap (then turning back).
+  line(rhythm, chord, triad) {
     const steps = [];
-    let cur = this.cur, lastMove = 0;
-    for (const o of onsets) {
-      const cands = [];
-      for (let d = -3; d <= 3; d++) {
-        const s = cur + d;
-        if (s < 0 || s > TOP_STEP) continue;
-        let w = { 0: 1, 1: 4, 2: 3, 3: 1 }[Math.abs(d)];
-        if (Math.abs(lastMove) >= 3 && Math.sign(d) === Math.sign(lastMove)) w *= 0.2; // after a leap, turn back
-        if (o % 4 === 0 && triad.includes(this.pcOf(s))) w *= 3; // strong beat: chord note
-        cands.push([s, w]);
-      }
-      const total = cands.reduce((a, c) => a + c[1], 0);
-      let r = Math.random() * total, pick = cands[0][0];
-      for (const [s, w] of cands) { if ((r -= w) < 0) { pick = s; break; } }
-      lastMove = pick - cur;
-      cur = pick;
-      steps.push(cur);
+    let prev = this.prev, lastMove = 0;
+    for (const n of rhythm) {
+      const cands = this.allowed(n, chord, triad);
+      if (!cands.length) { steps.push(prev ?? 7); continue; }
+      if (prev === null) { prev = this.nearest(7, cands); steps.push(prev); continue; }
+      const weights = cands.map((s) => {
+        const d = s - prev;
+        let w = { 0: 1.2, 1: 4, 2: 3, 3: 1.5, 4: 0.7, 5: 0.35 }[Math.abs(d)] ?? 0.1;
+        if (Math.abs(lastMove) >= 3 && Math.sign(d) === Math.sign(lastMove)) w *= 0.2;
+        return w;
+      });
+      const total = weights.reduce((a, b) => a + b, 0);
+      let r = Math.random() * total, k = 0;
+      while ((r -= weights[k]) > 0 && k < cands.length - 1) k++;
+      lastMove = cands[k] - prev;
+      prev = cands[k];
+      steps.push(prev);
     }
     return steps;
   }
 
-  pcOf(step) { return this.harmony.pc(step); }
-  clamp(s) { return Math.max(0, Math.min(TOP_STEP, s)); }
-
-  nearestChordStep(s, pcs) {
-    for (let d = 0; d <= 3; d++) {
-      for (const c of [s - d, s + d]) if (c >= 0 && c <= TOP_STEP && pcs.includes(this.pcOf(c))) return c;
-    }
-    return s;
+  nearest(s, cands) {
+    if (!cands.length) return s;
+    return cands.reduce((best, c) => (Math.abs(c - s) < Math.abs(best - s) ? c : best), cands[0]);
   }
 
   // Scale step → key: steps 0–9 on the middle row, higher ones on the top row.
