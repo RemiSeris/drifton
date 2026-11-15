@@ -39,6 +39,30 @@ const synths = {
 const harmony = new Harmony(2, "dorian");
 const groove = new Groove(ctx, drums, synths, harmony);
 
+// The lead you play from the keyboard: two detuned saws, a soft filter, a slow vibrato.
+const LEAD_PATCH = {
+  ...defaultParams(),
+  "a.wave": "sawtooth", "a.unison": 2, "a.spread": 0.15, "a.width": 0.4, "a.level": 0.45,
+  "b.wave": "square", "b.octave": 0, "b.fine": -6, "b.level": 0.2,
+  "noise.level": 0,
+  "filter.cutoff": 1800, "filter.res": 0.2, "filter.env": 1.2,
+  "fenv.attack": 0.005, "fenv.decay": 0.35, "fenv.sustain": 0.4, "fenv.release": 0.3,
+  "amp.attack": 0.006, "amp.decay": 0.3, "amp.sustain": 0.7, "amp.release": 0.25,
+  "lfo1.shape": "sine", "lfo1.rate": 5.5,
+  "mod1.src": "lfo1", "mod1.dst": "pitch", "mod1.amount": 0.06,
+  "mod2.src": "off", "mod3.src": "off",
+  "fx.reverb": 0.3,
+  volume: 0.55,
+};
+const lead = new Synth(ctx, LEAD_PATCH, master.input, master.send);
+const melody = new Melody(ctx, lead, harmony);
+// The lead also goes to the echo, as much as the style's keys do (dub: lots).
+const leadEcho = ctx.createGain();
+leadEcho.gain.value = 0;
+lead.volume.connect(leadEcho);
+leadEcho.connect(echo.input);
+groove.onBar = () => setParam(ctx, leadEcho.gain, groove.owners.keys.echo.keys * 0.8, true);
+
 groove.filter = djf;
 
 // Echo sends for the two synths, taken after their volume (like their reverb send).
@@ -53,7 +77,7 @@ for (const lane of ["bass", "keys"]) {
 
 const $ = (id) => document.getElementById(id);
 const css = getComputedStyle(document.documentElement);
-const colors = Object.fromEntries(GROOVE_LANES.map((l) => [l, css.getPropertyValue(`--c-${l}`).trim()]));
+const colors = Object.fromEntries([...GROOVE_LANES, "lead"].map((l) => [l, css.getPropertyValue(`--c-${l}`).trim()]));
 const STYLE_COLORS = { Funk: "#f2b56d", Dub: "#4fb8a8", "Bossa nova": "#c4bdff" };
 const LANE_NAMES = { kick: "Kick", snare: "Snare", hat: "Hats", perc: "Perc", bass: "Bass", keys: "Keys" };
 
@@ -152,24 +176,58 @@ function laneKey(e) {
   return i >= 0 ? i + 1 : 0;
 }
 
+// Which layout the keyboard has, for the labels and for keyboards that only report the
+// character: a guess from the browser language, then the browser's own layout map if it
+// has one, then what the keys actually type.
+let layout = /^fr(?!-CA)/i.test(navigator.language || "") ? "azerty" : "qwerty";
+if (navigator.keyboard && navigator.keyboard.getLayoutMap) {
+  navigator.keyboard.getLayoutMap().then((map) => {
+    const q = map.get("KeyQ");
+    if (q) { layout = q === "a" ? "azerty" : "qwerty"; pianoKey = ""; }
+  }).catch(() => {});
+}
+function learnLayout(e) {
+  const k = e.key.toLowerCase();
+  if (e.code === "KeyQ" && (k === "a" || k === "q")) {
+    const l = k === "a" ? "azerty" : "qwerty";
+    if (l !== layout) { layout = l; pianoKey = ""; }
+  }
+}
+
+// The melody key of an event, as a physical code (from the code, or from the character).
+function melodyCode(e) {
+  if (melody.place(e.code)) return e.code;
+  if (e.code) return null;
+  const k = e.key.toLowerCase();
+  for (let r = 0; r < 2; r++) {
+    const i = MELODY_LETTERS[layout][r].indexOf(k);
+    if (i >= 0) return MELODY_ROWS[r][i];
+  }
+  return null;
+}
+
 // What a key does. Physical code first, then the character, for keyboards and remote
-// desktops that only report one of them.
+// desktops that only report one of them. Gestures live on the bottom row (V B N) and
+// the space bar, so the two letter rows above are free for the melody.
 function action(e) {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (e.code === "Enter" || k === "Enter") return "play";
   if (e.code === "Space" || k === " ") return "roll";
   if (e.code === "KeyB" || k === "b") return "break";
-  if (e.code === "KeyF" || k === "f") return "filter";
-  if (e.code === "KeyR" || k === "r") return "build";
+  if (e.code === "KeyV" || k === "v") return "filter";
+  if (e.code === "KeyN" || k === "n") return "build";
   if (e.code === "ArrowRight" || k === "ArrowRight") return "right";
   if (e.code === "ArrowLeft" || k === "ArrowLeft") return "left";
+  if (e.code === "ArrowUp" || k === "ArrowUp") return "up";
+  if (e.code === "ArrowDown" || k === "ArrowDown") return "down";
   if (laneKey(e)) return "lane";
+  if (melodyCode(e)) return "note";
   return null;
 }
 
 // The key panel: a key stays lit while it is held.
-const CHIP = { play: "Enter", roll: "Space", break: "KeyB", filter: "KeyF", build: "KeyR",
-  right: "Arrows", left: "Arrows", lane: "Digits" };
+const CHIP = { play: "Enter", roll: "Space", break: "KeyB", filter: "KeyV", build: "KeyN",
+  right: "Arrows", left: "Arrows", up: "Octave", down: "Octave", lane: "Digits" };
 const held = new Set();
 function chip(act, on) {
   const el = document.querySelector(`.key[data-key="${CHIP[act]}"]`);
@@ -181,6 +239,11 @@ function tapChip(act) {
 }
 
 function press(act, e) {
+  if (act === "note") return ctx.resume(), melody.press(melodyCode(e));
+  if (act === "up" || act === "down") {
+    melody.octave = Math.max(-2, Math.min(2, melody.octave + (act === "up" ? 1 : -1)));
+    return tapChip(act);
+  }
   if (act === "play") return tapChip(act), togglePlay();
   if (act === "lane") {
     const lane = GROOVE_LANES[laneKey(e) - 1];
@@ -217,6 +280,7 @@ function release(act) {
 document.addEventListener("keydown", (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.tagName === "SELECT") return; // let an open menu use its own keys
+  learnLayout(e);
   const act = action(e);
   if (!act) return;
   e.preventDefault(); // no page scroll on Space or arrows, no slider move
@@ -227,11 +291,50 @@ document.addEventListener("keydown", (e) => {
 
 document.addEventListener("keyup", (e) => {
   const act = action(e);
-  if (act) release(act);
+  if (act === "note") melody.release(melodyCode(e));
+  else if (act) release(act);
 });
 
 // Switching window or tab while holding a key: we never get its keyup, so let go of all.
-window.addEventListener("blur", () => [...held].forEach(release));
+window.addEventListener("blur", () => {
+  [...held].forEach(release);
+  melody.releaseAll();
+});
+
+// ---- On-screen keyboard (melody) ----
+// Two rows of keys, as on the real keyboard: the letter, the note it plays, the root
+// marked, and the notes of the chord playing now marked too (good notes to land on).
+
+let pianoKey = ""; // what the keyboard was last drawn for, to redraw only on change
+function renderPiano() {
+  const chord = groove.running && groove.tones ? groove.tones.slice(0, 3) : []; // the triad
+  const sig = [layout, harmony.root, harmony.mode, melody.octave, chord.join()].join("|");
+  if (sig !== pianoKey) {
+    pianoKey = sig;
+    const el = $("piano");
+    el.innerHTML = "";
+    for (const r of [1, 0]) {
+      const row = document.createElement("div");
+      row.className = "prow" + (r === 0 ? " pmid" : "");
+      MELODY_ROWS[r].forEach((code, i) => {
+        const midi = melody.noteFor(code);
+        const k = document.createElement("div");
+        k.className = "pk";
+        if (i % 7 === 0) k.classList.add("root");
+        if (chord.includes(midi % 12)) k.classList.add("chord");
+        k.dataset.code = code;
+        const letter = MELODY_LETTERS[layout][r][i];
+        k.innerHTML = `<kbd>${letter.toUpperCase()}</kbd><span>${NOTE_NAMES[midi % 12]}<small>${Math.floor(midi / 12) - 1}</small></span>`;
+        row.append(k);
+      });
+      el.append(row);
+    }
+    $("octave-out").textContent = (melody.octave > 0 ? "+" : "") + melody.octave;
+  }
+  for (const k of $("piano").querySelectorAll(".pk")) k.classList.toggle("on", melody.down.has(k.dataset.code));
+}
+
+$("lead-volume").addEventListener("input", (e) => lead.set("volume", e.target.value / 100));
 
 // After a click on a menu, checkbox or slider, hand the keyboard back to the page:
 // a focused menu would swallow every key, and Space would also tick a focused checkbox.
@@ -327,10 +430,11 @@ function updateReadout() {
 function frame() {
   drawStage($("stage"), {
     now: ctx.currentTime, hits: groove.hits, live: groove.live, running: groove.running,
-    filter: djf.amount, lastDrop: groove.lastDrop, held,
+    filter: djf.amount, lastDrop: groove.lastDrop, held, lead: melody.log,
     color: STYLE_COLORS[groove.core.name] || "#8a7fff", colors, analyser: master.analyser,
   });
   drawGrid();
+  renderPiano();
   updateReadout();
   requestAnimationFrame(frame);
 }

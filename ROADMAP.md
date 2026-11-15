@@ -222,10 +222,20 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   filtre grand ouvert et kick plein. ← → morph d'un instrument par pression ; 1–6 coupes ;
   Entrée lecture. Touches 1–6 reconnues par touche physique ou par caractère (AZERTY).
   Une touche tenue reste allumée dans l'encart ; perte du focus = tout est relâché.
+- **Mélodie au clavier** (`groove/melody.js`) : les deux rangées de lettres jouent la gamme
+  du morceau (rangée du milieu = 10 notes depuis la fondamentale, rangée du haut = la même
+  une octave au-dessus), donc pas de fausse note ; ↑ ↓ changent d'octave. Touches lues par
+  position physique (`e.code`), avec repli sur le caractère selon la disposition détectée
+  (langue, `navigator.keyboard.getLayoutMap`, puis ce que tapent les touches). Son « lead »
+  (deux scies désaccordées, vibrato), envoyé dans l'écho comme les accords du style. Clavier
+  à l'écran : lettre, note, fondamentale entourée, notes de l'accord en cours pointées.
+  Les gestes ont déménagé pour libérer les lettres : filtre = V, montée = N (B et Espace
+  inchangés).
 - **Scène** (`groove/stage.js`) : un canvas qui dessine chaque coup réellement joué, sur
   l'horloge audio (disque sur le kick, anneau sur la snare, étincelles sur les hats, vague
   pour la basse, faisceaux pour les accords) ; rideaux pour le filtre, BREAK, jauge et BUILD,
-  flash et secousse au DROP ; fond à la couleur du style qui tient le beat, aussi intense
+  flash et secousse au DROP ; une comète par note de mélodie (gauche = grave, droite = aigu,
+  elle monte tant que la touche est tenue) ; fond à la couleur du style qui tient le beat, aussi intense
   que le mix.
 - Ordonnanceur plus serré que le générateur (25 ms / 150 ms d'avance) pour réagir vite au
   curseur ; avance allongée quand l'onglet est caché.
@@ -237,6 +247,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Mélodie jouable au clavier, calée sur la gamme, avec clavier à l'écran et comètes sur la scène ; filtre et montée passés sur V et N.
 
 - **2026-11-15** — Touches tenues (roulement, break, filtre DJ, montée + drop) et scène visuelle qui réagit à chaque coup joué.
 

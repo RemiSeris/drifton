@@ -7,6 +7,7 @@
   --c-perc: #f2c46d;
   --c-bass: #4fb8a8;
   --c-keys: #8a7fff;
+  --c-lead: #ff8fd0;
 }
 
 .chord { font-size: 1.6rem; font-weight: 500; letter-spacing: 0.02em; }
@@ -44,3 +45,32 @@ kbd {
 
 .stage-wrap { padding: 0; overflow: hidden; }
 canvas#stage { display: block; width: 100%; height: 220px; }
+
+.piano { display: flex; flex-direction: column; gap: 6px; margin-bottom: 0.8rem; }
+.prow { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+.prow.pmid { margin-left: 3%; } /* offset like a real keyboard */
+.pk {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 0 7px;
+  border-radius: 8px;
+  background: var(--card-active);
+  border: 1px solid #2f2c45;
+  border-bottom-width: 3px;
+  transition: background 0.06s, transform 0.06s, box-shadow 0.06s;
+}
+.pk kbd { border: 0; background: none; padding: 0; min-width: 0; font-size: 0.72rem; color: var(--muted); }
+.pk span { font-weight: 500; font-size: 0.95rem; color: var(--fg); }
+.pk small { font-size: 0.6rem; color: var(--muted); margin-left: 1px; }
+.pk.root { border-color: var(--c-lead); }
+.pk.chord span::after { content: "•"; color: var(--c-lead); margin-left: 2px; }
+.pk.on {
+  background: var(--c-lead);
+  transform: translateY(2px);
+  box-shadow: 0 0 18px var(--c-lead);
+}
+.pk.on span, .pk.on kbd, .pk.on small { color: var(--bg); }
+.pk.on span::after { color: var(--bg); }
+.melody-row { display: flex; align-items: center; gap: 1rem; }
+.melody-row .row { flex: 1; margin: 0; }
+.octave { font-size: 0.9rem; color: var(--muted); white-space: nowrap; }
+.octave b { color: var(--fg); }

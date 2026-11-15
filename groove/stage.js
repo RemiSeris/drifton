@@ -5,6 +5,8 @@
 //   kick  → a disc that thumps in the middle        snare → a ring that flies out
 //   hats  → sparks                                  perc  → small diamonds
 //   bass  → a wave rising from the floor            keys  → light beams
+//   melody (you) → a comet per note: left = low, right = high; it rises while you hold
+//                  the key and floats away when you let go
 // On top, the live gestures:
 //   filter → curtains close from top and bottom     roll / build-up → a meter that fills
 //   break  → the floor goes dark, "BREAK"           drop → white flash and a shake
@@ -96,6 +98,43 @@ function drawStage(canvas, s) {
         g.fillStyle = grad;
         g.fillRect(x - 3 * dpr, 0, 6 * dpr, H * (0.4 + 0.4 * stageRand(h.t, k)));
       }
+    }
+  }
+  // Melody notes: comets.
+  if (s.lead) {
+    for (const n of s.lead) {
+      if (n.t > s.now) continue;
+      const after = n.end === Infinity ? 0 : s.now - n.end;
+      if (after > 0.8) continue;
+      const fade = 1 - after / 0.8;
+      const held = Math.min(n.end, s.now) - n.t;
+      const x = W * (0.06 + 0.88 * Math.min(1, Math.max(0, (n.midi - 55) / 36)));
+      const y = H * (0.88 - 0.55 * Math.min(1, held / 1.2)) - after * H * 0.5;
+      const r = (10 + 5 * Math.min(1, held)) * dpr;
+      // The moment the note starts: a ripple on the floor.
+      const born = s.now - n.t;
+      if (born < 0.45) {
+        const a = born / 0.45;
+        g.globalAlpha = 0.8 * (1 - a);
+        g.strokeStyle = s.colors.lead;
+        g.lineWidth = 3 * dpr * (1 - a);
+        g.beginPath(); g.arc(x, H * 0.88, r + a * H * 0.35, 0, Math.PI * 2); g.stroke();
+      }
+      const trail = g.createLinearGradient(0, y, 0, H);
+      trail.addColorStop(0, s.colors.lead);
+      trail.addColorStop(1, "transparent");
+      g.globalAlpha = 0.35 * fade;
+      g.fillStyle = trail;
+      g.fillRect(x - r * 0.35, y, r * 0.7, H - y);
+      const halo = g.createRadialGradient(x, y, 0, x, y, r * 3);
+      halo.addColorStop(0, s.colors.lead);
+      halo.addColorStop(1, "transparent");
+      g.globalAlpha = 0.5 * fade;
+      g.fillStyle = halo;
+      g.fillRect(x - r * 3, y - r * 3, r * 6, r * 6);
+      g.globalAlpha = fade;
+      g.fillStyle = "#ffe6f4";
+      g.beginPath(); g.arc(x, y, r * 0.6, 0, Math.PI * 2); g.fill();
     }
   }
   g.globalAlpha = 1;
