@@ -53,26 +53,58 @@ class Groove {
     this.echo = null;     // optional Echo, with one send per synth: { bass, keys }
     this.synthEcho = {};
     this.owners = this.wanted();
-    this.fill = null; // { from: step, to: style } while a fill is playing
-    this.queuedFill = null; // live: a fill asked too late in the bar, played on the next
-    this.pendingBreak = false; // live: drums drop out for the next bar
-    this.breaking = false;
+    this.fill = null; // { from: step, to: style } while an automatic fill is playing
+
+    // Live gestures (keys held down). Times are counted in steps since start (`abs`),
+    // and every gesture waits for the next beat, so it always lands in time.
+    this.abs = 0;       // absolute index of the next step to schedule
+    this.roll = null;   // { from, until, build }: snare roll, `until` = Infinity while held
+    this.brk = null;    // { from, until }: drums out
+    this.dropAt = null; // abs step where a build-up drops
+    this.filter = null; // optional DJFilter (the build-up closes it, the drop opens it)
+    this.live = { rolling: false, building: false, breaking: false, rollLevel: 0 };
+    this.lastDrop = -1; // audio time of the last drop (for the display)
   }
 
-  // ---- Live controls (keyboard) ----
+  // ---- Live controls (keys held down) ----
 
-  // A fill from the next beat to the end of this bar (or the next bar, if this one is
-  // almost over). Ignored while a style change is already being announced.
-  requestFill() {
-    if (!this.running || this.fill) return;
-    const from = Math.max(4, Math.ceil(this.step / 4) * 4);
-    if (from <= 12) this.fill = { from, to: this.core, fromBpm: this.bpm };
-    else this.queuedFill = 8;
+  nextBeat() { return Math.ceil(this.abs / 4) * 4; }
+  nextDownbeat(after = this.abs) { return Math.ceil(after / 16) * 16; }
+
+  // Space down: a snare roll from the next beat, louder and denser the longer you hold.
+  rollPress() {
+    if (!this.running || this.roll) return;
+    this.roll = { from: this.nextBeat(), until: Infinity, build: false };
+  }
+  // Space up: the roll ends on the next beat (at least one beat long); the groove is back.
+  rollRelease() {
+    if (!this.roll || this.roll.build || this.roll.until !== Infinity) return;
+    this.roll.until = Math.max(this.nextBeat(), this.roll.from + 4);
   }
 
-  // The drums drop out for one whole bar, then come back on the downbeat.
-  requestBreak() {
-    if (this.running) this.pendingBreak = true;
+  // B down: the drums drop out from the next beat, for as long as you hold.
+  breakPress() {
+    if (!this.running || this.brk) return;
+    this.brk = { from: this.nextBeat(), until: Infinity };
+  }
+  // B up: they come back on the next downbeat (the "one").
+  breakRelease() {
+    if (!this.brk || this.brk.until !== Infinity) return;
+    this.brk.until = Math.max(this.nextDownbeat(), this.nextDownbeat(this.brk.from + 1));
+  }
+
+  // R down: build-up. Kick and bass leave, a roll starts and swells, the filter closes.
+  buildPress() {
+    if (!this.running || (this.roll && this.roll.build)) return;
+    this.roll = { from: this.nextBeat(), until: Infinity, build: true };
+    if (this.filter) this.filter.close(4);
+  }
+  // R up: the DROP, on the next downbeat: everything back at once, filter wide open.
+  buildRelease() {
+    if (!this.roll || !this.roll.build || this.roll.until !== Infinity) return;
+    const drop = Math.max(this.nextDownbeat(), this.nextDownbeat(this.roll.from + 1));
+    this.roll.until = drop;
+    this.dropAt = drop;
   }
 
   // Move the morph by one instrument: to the next (dir = 1) or previous (-1) hand-over.
@@ -106,9 +138,8 @@ class Groove {
     this.barsInChord = 0;
     this.owners = this.wanted();
     this.fill = null;
-    this.queuedFill = null;
-    this.pendingBreak = false;
-    this.breaking = false;
+    this.abs = 0;
+    this.roll = this.brk = this.dropAt = null;
     if (this.followTempo) this.bpm = this.core.bpm;
     this.nextStep = this.ctx.currentTime + 0.1;
     this.degree = 0;
@@ -124,6 +155,9 @@ class Groove {
     clearInterval(this.timer);
     this.synths.bass.allOff();
     this.synths.keys.allOff();
+    if (this.filter) this.filter.open();
+    this.roll = this.brk = this.dropAt = null;
+    this.live = { rolling: false, building: false, breaking: false, rollLevel: 0 };
   }
 
   tick() {
@@ -163,14 +197,9 @@ class Groove {
     // Plan this bar's fill: a long one before a core switch, a short one every 8 bars.
     if (want.kick !== this.core) {
       this.fill = { from: 8, to: want.kick, fromBpm: this.bpm };
-    } else if (this.queuedFill !== null) {
-      this.fill = { from: this.queuedFill, to: this.core, fromBpm: this.bpm };
-    } else if (this.bar % 8 === 7) {
+    } else if (this.bar % 8 === 7 && !this.roll) {
       this.fill = { from: 12, to: this.core, fromBpm: this.bpm };
     }
-    this.queuedFill = null;
-    this.breaking = this.pendingBreak;
-    this.pendingBreak = false;
 
     if (this.bar > 0) {
       this.barsInChord++;
@@ -212,7 +241,23 @@ class Groove {
 
   playStep(i, t) {
     if (i === 0) this.startBar(t);
-    const fill = this.fill && i >= this.fill.from ? this.fill : null;
+    const abs = this.abs++;
+    // Live gestures: which ones are sounding on this step?
+    if (this.roll && abs >= this.roll.until) this.roll = null;
+    if (this.brk && abs >= this.brk.until) this.brk = null;
+    const roll = this.roll && abs >= this.roll.from ? this.roll : null;
+    const breaking = !!(this.brk && abs >= this.brk.from);
+    const dropping = this.dropAt === abs;
+    if (dropping) {
+      this.dropAt = null;
+      if (this.filter) this.filter.open(t, 0.05);
+      this.lastDrop = t;
+    }
+    // How far the roll has grown: 0 → 1 over 1 bar (2 bars for a build-up).
+    const rollLevel = roll ? Math.min(1, (abs - roll.from) / (roll.build ? 32 : 16)) : 0;
+    this.live = { rolling: !!roll, building: !!(roll && roll.build), breaking, rollLevel };
+
+    const fill = !roll && this.fill && i >= this.fill.from ? this.fill : null;
     // During a switching fill, the tempo slides step by step towards the new style.
     if (fill && this.followTempo && fill.to !== this.core) {
       const k = (i - fill.from + 1) / (16 - fill.from);
@@ -225,18 +270,36 @@ class Groove {
 
     for (const lane of GROOVE_LANES) {
       if (!this.on[lane]) continue;
-      if (this.breaking && DRUM_LANES.includes(lane)) continue;
+      const drum = DRUM_LANES.includes(lane);
+      if (breaking && drum) continue;
+      if (roll && roll.build && lane === "bass") continue; // the build-up takes the bass away
       const style = this.owners[lane];
       let p = style.lanes[lane].prob[i];
       let v = style.lanes[lane].vel[i];
-      if (fill && DRUM_LANES.includes(lane)) [p, v] = this.fillHit(lane, i, fill);
+      if (roll && drum) [p, v] = this.rollHit(lane, abs, roll, rollLevel);
+      else if (fill && drum) [p, v] = this.fillHit(lane, i, fill);
+      if (dropping && lane === "kick") [p, v] = [1, 1]; // the drop lands on a full kick
       if (p === 0 || Math.random() >= p) continue;
       // A human never hits twice exactly the same, nor exactly on time.
       v = Math.min(1, v * (0.88 + Math.random() * 0.24));
       const tt = swung + (Math.random() - 0.5) * 0.008;
       this.fire(lane, i, tt, v, style);
       this.hits.push({ lane, step: i, t: tt, v });
+      // A roll held long enough doubles up: an extra hit between the sixteenths.
+      if (roll && lane === "snare" && rollLevel > 0.5) {
+        const t2 = tt + sixteenth / 2;
+        this.fire(lane, i, t2, v * 0.8, style);
+        this.hits.push({ lane, step: i, t: t2, v: v * 0.8 });
+      }
     }
+  }
+
+  // A live roll replaces the drums: snare only (plus the kick on its first step, except
+  // in a build-up, where the kick is gone until the drop).
+  rollHit(lane, abs, roll, level) {
+    if (lane === "snare") return [roll.build ? 1 : abs % 2 ? 0.6 : 0.95, 0.3 + 0.65 * level];
+    if (lane === "kick" && !roll.build && abs === roll.from) return [1, 0.85];
+    return [0, 0];
   }
 
   // A fill replaces the drums: a snare roll that grows louder, the kick on its first

@@ -212,14 +212,21 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   temps musicaux (croche pointée), répétitions de plus en plus sourdes. L'espace du dub
   passe par l'écho et non par la réverbe : une frappe dans une réverbe de bruit devient un
   souffle, une frappe dans un écho reste une frappe.
-- **Jeu en live au clavier** : Entrée lecture / stop ; Espace roulement (du prochain temps à
-  la fin de la mesure, ou la mesure suivante si trop tard) ; B break (la batterie se tait
-  une mesure, basse et accords continuent) ; ← → morph d'un instrument par pression (d'un
-  seuil de passage au suivant) ; 1–6 coupe / remet kick, snare, hats, perc, basse, keys.
-  Touches 1–6 reconnues par la touche physique (`Digit1`…, `Numpad1`…) ou par le caractère
-  (1–6, ou & é " ' ( - en AZERTY, pour les navigateurs et bureaux à distance qui ne donnent
-  que le caractère). Après un clic sur un menu, une case ou un curseur, le focus est rendu
-  à la page (sinon un menu avale les touches et Espace recoche une case).
+- **Jeu en live au clavier, touches tenues** : les gestes durent tant qu'on tient la touche
+  et partent au prochain temps (compteur de pas absolu `abs`).
+  Espace = roulement qui grossit (plein en 1 mesure, doublé en triples croches à mi-chemin),
+  fini au temps suivant le relâché ; B = break tant qu'on tient, la batterie revient sur le
+  « un » ; F = filtre DJ (`synth/djfilter.js`, passe-bas sur tout le mix, réverbe comprise,
+  qui se ferme en 3 s avec résonance montante) ; R = montée (kick et basse sortent, roulement
+  qui grossit sur 2 mesures, filtre qui se ferme), relâché = DROP sur le prochain « un » :
+  filtre grand ouvert et kick plein. ← → morph d'un instrument par pression ; 1–6 coupes ;
+  Entrée lecture. Touches 1–6 reconnues par touche physique ou par caractère (AZERTY).
+  Une touche tenue reste allumée dans l'encart ; perte du focus = tout est relâché.
+- **Scène** (`groove/stage.js`) : un canvas qui dessine chaque coup réellement joué, sur
+  l'horloge audio (disque sur le kick, anneau sur la snare, étincelles sur les hats, vague
+  pour la basse, faisceaux pour les accords) ; rideaux pour le filtre, BREAK, jauge et BUILD,
+  flash et secousse au DROP ; fond à la couleur du style qui tient le beat, aussi intense
+  que le mix.
 - Ordonnanceur plus serré que le générateur (25 ms / 150 ms d'avance) pour réagir vite au
   curseur ; avance allongée quand l'onglet est caché.
 - Pistes : d'autres styles (house, afrobeat en 12/8, trip-hop…), un éditeur de grille à la
@@ -230,6 +237,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Touches tenues (roulement, break, filtre DJ, montée + drop) et scène visuelle qui réagit à chaque coup joué.
 
 - **2026-11-15** — Clavier live : les touches 1–6 ne réagissaient pas chez un utilisateur AZERTY ; elles sont maintenant aussi reconnues au pavé numérique et par caractère, et les menus rendent le focus.
 

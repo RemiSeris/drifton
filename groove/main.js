@@ -27,6 +27,10 @@ const KEYS_PATCH = {
 const echo = new Echo(ctx);
 echo.output.connect(master.input);
 
+// The DJ filter sits on the whole mix (reverb included), just before the limiter.
+const djf = new DJFilter(ctx);
+djf.insert(master);
+
 const drums = new Drums(ctx, master.input, master.send, echo.input);
 const synths = {
   bass: new Synth(ctx, BASS_PATCH, master.input, master.send),
@@ -34,6 +38,8 @@ const synths = {
 };
 const harmony = new Harmony(2, "dorian");
 const groove = new Groove(ctx, drums, synths, harmony);
+
+groove.filter = djf;
 
 // Echo sends for the two synths, taken after their volume (like their reverb send).
 groove.echo = echo;
@@ -48,6 +54,7 @@ for (const lane of ["bass", "keys"]) {
 const $ = (id) => document.getElementById(id);
 const css = getComputedStyle(document.documentElement);
 const colors = Object.fromEntries(GROOVE_LANES.map((l) => [l, css.getPropertyValue(`--c-${l}`).trim()]));
+const STYLE_COLORS = { Funk: "#f2b56d", Dub: "#4fb8a8", "Bossa nova": "#c4bdff" };
 const LANE_NAMES = { kick: "Kick", snare: "Snare", hat: "Hats", perc: "Perc", bass: "Bass", keys: "Keys" };
 
 // ---- Transport ----
@@ -145,40 +152,86 @@ function laneKey(e) {
   return i >= 0 ? i + 1 : 0;
 }
 
-function flashKey(name) {
-  const el = document.querySelector(`.key[data-key="${name}"]`);
-  if (!el) return;
-  el.classList.add("hit");
-  setTimeout(() => el.classList.remove("hit"), 140);
+// What a key does. Physical code first, then the character, for keyboards and remote
+// desktops that only report one of them.
+function action(e) {
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (e.code === "Enter" || k === "Enter") return "play";
+  if (e.code === "Space" || k === " ") return "roll";
+  if (e.code === "KeyB" || k === "b") return "break";
+  if (e.code === "KeyF" || k === "f") return "filter";
+  if (e.code === "KeyR" || k === "r") return "build";
+  if (e.code === "ArrowRight" || k === "ArrowRight") return "right";
+  if (e.code === "ArrowLeft" || k === "ArrowLeft") return "left";
+  if (laneKey(e)) return "lane";
+  return null;
 }
 
-document.addEventListener("keydown", (e) => {
-  if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
-  if (e.target.tagName === "SELECT") return; // let an open menu use its own keys
-  const code = e.code;
-  let handled = true;
-  if (code === "Enter") { togglePlay(); flashKey("Enter"); }
-  else if (code === "Space") {
-    if (groove.running) groove.requestFill(); else togglePlay();
-    flashKey("Space");
-  } else if (code === "KeyB") { groove.requestBreak(); flashKey("KeyB"); }
-  else if (code === "ArrowRight" || code === "ArrowLeft") {
-    groove.stepMorph(code === "ArrowRight" ? 1 : -1);
+// The key panel: a key stays lit while it is held.
+const CHIP = { play: "Enter", roll: "Space", break: "KeyB", filter: "KeyF", build: "KeyR",
+  right: "Arrows", left: "Arrows", lane: "Digits" };
+const held = new Set();
+function chip(act, on) {
+  const el = document.querySelector(`.key[data-key="${CHIP[act]}"]`);
+  if (el) el.classList.toggle("held", on);
+}
+function tapChip(act) {
+  chip(act, true);
+  setTimeout(() => { if (!held.has(act)) chip(act, false); }, 140);
+}
+
+function press(act, e) {
+  if (act === "play") return tapChip(act), togglePlay();
+  if (act === "lane") {
+    const lane = GROOVE_LANES[laneKey(e) - 1];
+    setLane(lane, !groove.on[lane]);
+    return tapChip(act);
+  }
+  if (act === "left" || act === "right") {
+    groove.stepMorph(act === "right" ? 1 : -1);
     $("auto").checked = false;
     $("mix").disabled = false;
     $("mix").value = Math.round(groove.mix * 100);
     idleUpdate();
-    flashKey("Arrows");
-  } else if (laneKey(e)) {
-    const lane = GROOVE_LANES[laneKey(e) - 1];
-    setLane(lane, !groove.on[lane]);
-    flashKey("Digits");
-  } else handled = false;
-  if (handled) {
-    e.preventDefault(); // no page scroll on Space or arrows, no slider move
-    if (document.activeElement && document.activeElement.tagName === "INPUT") document.activeElement.blur();
+    return tapChip(act);
   }
+  if (act === "roll" && !groove.running) return tapChip(act), togglePlay();
+  // Held gestures.
+  held.add(act);
+  chip(act, true);
+  if (act === "roll") groove.rollPress();
+  if (act === "break") groove.breakPress();
+  if (act === "filter") djf.close(3);
+  if (act === "build") groove.buildPress();
+}
+
+function release(act) {
+  if (!held.delete(act)) return;
+  chip(act, false);
+  if (act === "roll") groove.rollRelease();
+  if (act === "break") groove.breakRelease();
+  if (act === "filter" && !groove.live.building) djf.open();
+  if (act === "build") groove.buildRelease();
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target.tagName === "SELECT") return; // let an open menu use its own keys
+  const act = action(e);
+  if (!act) return;
+  e.preventDefault(); // no page scroll on Space or arrows, no slider move
+  if (document.activeElement && document.activeElement.tagName === "INPUT") document.activeElement.blur();
+  if (e.repeat) return; // a held key repeats: we only want the first press
+  press(act, e);
 });
+
+document.addEventListener("keyup", (e) => {
+  const act = action(e);
+  if (act) release(act);
+});
+
+// Switching window or tab while holding a key: we never get its keyup, so let go of all.
+window.addEventListener("blur", () => [...held].forEach(release));
 
 // After a click on a menu, checkbox or slider, hand the keyboard back to the page:
 // a focused menu would swallow every key, and Space would also tick a focused checkbox.
@@ -209,7 +262,7 @@ function drawGrid() {
   GROOVE_LANES.forEach((lane, r) => {
     const y = r * cellH;
     const style = owners[lane];
-    const live = groove.on[lane] && !(groove.breaking && DRUM_LANES.includes(lane));
+    const live = groove.on[lane] && !(groove.live.breaking && DRUM_LANES.includes(lane));
     // Lane name, and under it the style it is playing right now.
     g.globalAlpha = live ? 0.9 : 0.3;
     g.fillStyle = colors[lane];
@@ -260,10 +313,11 @@ function updateReadout() {
   const onB = GROOVE_LANES.filter((l) => owners[l] !== groove.a).length;
   const where = onB === 0 ? groove.a.name : onB === GROOVE_LANES.length ? groove.b.name
     : `${groove.a.name} → ${groove.b.name} · ${onB}/${GROOVE_LANES.length} on ${groove.b.name}`;
+  const L = groove.live;
   const live = !groove.running ? ""
-    : groove.breaking ? " · break!"
-    : groove.pendingBreak ? " · break next bar"
-    : groove.fill || groove.queuedFill !== null ? " · fill!" : "";
+    : L.building ? " · build-up…"
+    : L.breaking ? " · break"
+    : L.rolling || groove.fill ? " · roll" : "";
   $("status").textContent = `${where}${live} · ${Math.round(groove.bpm)} bpm · ${NOTE_NAMES[harmony.root]} ${harmony.mode}`;
   if (groove.autoMorph) $("mix").value = Math.round(groove.mix * 100);
   $("bpm-out").textContent = Math.round(groove.bpm);
@@ -271,6 +325,11 @@ function updateReadout() {
 }
 
 function frame() {
+  drawStage($("stage"), {
+    now: ctx.currentTime, hits: groove.hits, live: groove.live, running: groove.running,
+    filter: djf.amount, lastDrop: groove.lastDrop, held,
+    color: STYLE_COLORS[groove.core.name] || "#8a7fff", colors, analyser: master.analyser,
+  });
   drawGrid();
   updateReadout();
   requestAnimationFrame(frame);
