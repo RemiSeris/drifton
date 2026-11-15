@@ -5,6 +5,8 @@
 //   kick  → a disc that thumps in the middle        snare → a ring that flies out
 //   hats  → sparks                                  perc  → small diamonds
 //   bass  → a wave rising from the floor            keys  → light beams
+//   guide / auto → the composer's notes fall towards the play line, one column per
+//                  pitch; you hit them as they touch it (Perfect / Good / Miss)
 //   melody (you) → a comet per note: left = low, right = high; it rises while you hold
 //                  the key and floats away when you let go
 // On top, the live gestures:
@@ -100,6 +102,52 @@ function drawStage(canvas, s) {
       }
     }
   }
+  // Composer notes falling towards the play line (Guide and Auto).
+  const pitchX = (midi) => W * (0.06 + 0.88 * Math.min(1, Math.max(0, (midi - 55) / 36)));
+  if (s.guide) {
+    const floor = H * 0.86;
+    const ahead = 2.2; // seconds of music visible above the line
+    g.globalAlpha = 0.5;
+    g.fillStyle = s.colors.lead;
+    g.fillRect(0, floor, W, 2 * dpr);
+    for (const n of s.guide.notes) {
+      const end = n.end ?? n.t + n.len * s.guide.sixteenth * 0.92;
+      const dt = n.t - s.now, de = end - s.now;
+      if (dt > ahead || de < -0.25) continue;
+      const x = pitchX(s.guide.noteFor(n.code));
+      const yb = floor - (Math.max(dt, 0) / ahead) * floor;   // bottom = the note's start
+      const yt = floor - (Math.max(de, 0) / ahead) * floor;   // top = its end
+      const w = 22 * dpr;
+      const hit = n.judged === "perfect" || n.judged === "good";
+      g.globalAlpha = n.judged === "miss" ? 0.15 : hit ? 0.95 : dt <= 0 ? 0.85 : 0.5;
+      g.fillStyle = hit ? "#ffe6f4" : s.colors.lead;
+      const h = Math.max(4 * dpr, yb - yt);
+      g.beginPath();
+      if (g.roundRect) g.roundRect(x - w / 2, yb - h, w, h, 5 * dpr); else g.rect(x - w / 2, yb - h, w, h);
+      g.fill();
+      // The letter to press, on the head of the note while it comes down.
+      if (s.guide.game && !n.judged && dt > -0.05 && s.guide.labelFor) {
+        g.globalAlpha = 0.95;
+        g.fillStyle = "#0a0a0f";
+        g.font = `700 ${12 * dpr}px sans-serif`;
+        g.textAlign = "center";
+        g.textBaseline = "middle";
+        g.fillText(s.guide.labelFor(n.code), x, yb - Math.min(h, 16 * dpr) / 2);
+        g.textAlign = "start";
+      }
+    }
+    for (const f of s.guide.feedback) {
+      const age = s.now - f.t;
+      if (age < 0) continue;
+      g.globalAlpha = Math.max(0, 1 - age / 0.8);
+      g.fillStyle = f.text === "Miss" ? "#8a8699" : f.text === "Perfect" ? "#ffe6f4" : s.colors.lead;
+      g.font = `600 ${(f.text === "Perfect" ? 15 : 13) * dpr}px sans-serif`;
+      g.textAlign = "center";
+      g.fillText(f.text, pitchX(f.midi), floor - 14 * dpr - age * 40 * dpr);
+      g.textAlign = "start";
+    }
+  }
+
   // Melody notes: comets.
   if (s.lead) {
     for (const n of s.lead) {
@@ -108,7 +156,7 @@ function drawStage(canvas, s) {
       if (after > 0.8) continue;
       const fade = 1 - after / 0.8;
       const held = Math.min(n.end, s.now) - n.t;
-      const x = W * (0.06 + 0.88 * Math.min(1, Math.max(0, (n.midi - 55) / 36)));
+      const x = pitchX(n.midi);
       const y = H * (0.88 - 0.55 * Math.min(1, held / 1.2)) - after * H * 0.5;
       const r = (10 + 5 * Math.min(1, held)) * dpr;
       // The moment the note starts: a ripple on the floor.

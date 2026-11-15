@@ -232,6 +232,17 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   à l'écran : lettre, note, fondamentale entourée, notes de l'accord en cours pointées.
   Les gestes ont déménagé pour libérer les lettres : filtre = V, montée = N (B et Espace
   inchangés).
+- **Compositeur de mélodie** (`groove/composer.js`) et trois modes (boutons ou touche C) :
+  *Free* (on joue), *Guide* (la mélodie est écrite mais muette : ses notes tombent sur la
+  scène vers une ligne de jeu avec la lettre à taper, les touches du clavier à l'écran
+  s'allument sur les 2 temps qui précèdent puis se remplissent au moment de jouer ; jugement
+  ±60 ms Perfect, ±150 ms Good, sinon Miss, compensé de la latence de sortie ; série et
+  pourcentage), *Auto* (le lead la joue). Écriture une mesure à l'avance sur l'horloge du
+  groove (`groove.onStep`), en phrases de 4 mesures : motif, même rythme légèrement déplacé,
+  réponse, cadence longue sur la fondamentale. Rythme selon le style du beat (grille de
+  poids : funk chargé et syncopé, dub rare et long, bossa en croches balancées) ; hauteurs
+  en marche sur la gamme, surtout par degrés conjoints, retour après un saut, notes de
+  l'accord sur les temps forts.
 - **Scène** (`groove/stage.js`) : un canvas qui dessine chaque coup réellement joué, sur
   l'horloge audio (disque sur le kick, anneau sur la snare, étincelles sur les hats, vague
   pour la basse, faisceaux pour les accords) ; rideaux pour le filtre, BREAK, jauge et BUILD,
@@ -248,6 +259,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Compositeur de mélodie : modes Free / Guide (jeu de rythme avec notes qui tombent, touches allumées à l'avance, score) / Auto.
 
 - **2026-11-15** — Octave de la mélodie sur Z / X (W / X en AZERTY) : chez un utilisateur, le navigateur gardait ↑ ↓ pour lui. Clavier écouté en phase de capture sur `window`.
 

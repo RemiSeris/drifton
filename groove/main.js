@@ -56,6 +56,8 @@ const LEAD_PATCH = {
 };
 const lead = new Synth(ctx, LEAD_PATCH, master.input, master.send);
 const melody = new Melody(ctx, lead, harmony);
+const composer = new Composer(groove, harmony, melody);
+groove.onStep = (i, abs, t, sixteenth) => composer.onStep(i, abs, t, sixteenth);
 // The lead also goes to the echo, as much as the style's keys do (dub: lots).
 const leadEcho = ctx.createGain();
 leadEcho.gain.value = 0;
@@ -85,6 +87,7 @@ const LANE_NAMES = { kick: "Kick", snare: "Snare", hat: "Hats", perc: "Perc", ba
 
 async function togglePlay() {
   await ctx.resume();
+  composer.reset();
   groove.running ? groove.stop() : groove.start();
   $("play").classList.toggle("playing", groove.running);
   $("play-icon").setAttribute("d", groove.running ? "M7 7h10v10H7z" : "M8 5v14l11-7z");
@@ -218,6 +221,7 @@ function action(e) {
   if (e.code === "KeyB" || k === "b") return "break";
   if (e.code === "KeyV" || k === "v") return "filter";
   if (e.code === "KeyN" || k === "n") return "build";
+  if (e.code === "KeyC" || k === "c") return "mode";
   if (e.code === "ArrowRight" || k === "ArrowRight") return "right";
   if (e.code === "ArrowLeft" || k === "ArrowLeft") return "left";
   if (e.code === "KeyX" || k === "x" || e.code === "ArrowUp" || k === "ArrowUp") return "up";
@@ -230,7 +234,7 @@ function action(e) {
 
 // The key panel: a key stays lit while it is held.
 const CHIP = { play: "Enter", roll: "Space", break: "KeyB", filter: "KeyV", build: "KeyN",
-  right: "Arrows", left: "Arrows", up: "Octave", down: "Octave", lane: "Digits" };
+  right: "Arrows", left: "Arrows", up: "Octave", down: "Octave", lane: "Digits", mode: "KeyC" };
 const held = new Set();
 function chip(act, on) {
   const el = document.querySelector(`.key[data-key="${CHIP[act]}"]`);
@@ -242,7 +246,19 @@ function tapChip(act) {
 }
 
 function press(act, e) {
-  if (act === "note") return ctx.resume(), melody.press(melodyCode(e));
+  if (act === "note") {
+    ctx.resume();
+    const code = melodyCode(e);
+    melody.press(code);
+    // Judge against what you hear: the sound leaves the speakers a bit after ctx time.
+    composer.judge(code, ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0));
+    return;
+  }
+  if (act === "mode") {
+    const order = ["free", "guide", "auto"];
+    setMelodyMode(order[(order.indexOf(composer.mode) + 1) % 3]);
+    return tapChip(act);
+  }
   if (act === "up" || act === "down") {
     melody.octave = Math.max(-2, Math.min(2, melody.octave + (act === "up" ? 1 : -1)));
     return tapChip(act);
@@ -337,7 +353,56 @@ function renderPiano() {
     $("octave-out").textContent = (melody.octave > 0 ? "+" : "") + melody.octave;
     $("oct-down").textContent = layout === "azerty" ? "W" : "Z";
   }
-  for (const k of $("piano").querySelectorAll(".pk")) k.classList.toggle("on", melody.down.has(k.dataset.code));
+  // Lit: held by you, or sounding from the composer (Auto).
+  const now = ctx.currentTime;
+  const sounding = new Set(melody.down.keys());
+  for (const n of melody.log) if (n.t <= now && now < n.end) sounding.add(n.code);
+  // Cues: the next note due on each key glows brighter as it comes (over 2 beats),
+  // and is filled while it should be held.
+  const cue = {}, cueNow = new Set();
+  if (composer.mode !== "free" && groove.running) {
+    const span = 8 * (60 / groove.bpm / 4);
+    for (const n of composer.notes) {
+      if (n.judged === "miss") continue;
+      const end = n.end ?? n.t + n.len * (60 / groove.bpm / 4);
+      if (n.t <= now && now < end) cueNow.add(n.code);
+      const dt = n.t - now;
+      if (dt >= 0 && dt < span) cue[n.code] = Math.max(cue[n.code] || 0, 1 - dt / span);
+    }
+  }
+  for (const k of $("piano").querySelectorAll(".pk")) {
+    const c = k.dataset.code;
+    k.classList.toggle("on", sounding.has(c));
+    k.classList.toggle("cue", !!cue[c]);
+    k.classList.toggle("cue-now", cueNow.has(c));
+    k.style.setProperty("--cue", (cue[c] || 0).toFixed(2));
+  }
+}
+
+// ---- Melody mode: free / guide / auto ----
+
+function setMelodyMode(mode) {
+  composer.mode = mode;
+  composer.reset();
+  if (mode === "guide") composer.resetScore();
+  for (const b of document.querySelectorAll("#mode button")) b.classList.toggle("active", b.dataset.mode === mode);
+}
+for (const b of document.querySelectorAll("#mode button")) {
+  b.addEventListener("click", () => { setMelodyMode(b.dataset.mode); b.blur(); });
+}
+
+function updateScore() {
+  const m = composer.mode;
+  let text = "";
+  if (m === "guide") {
+    const pct = composer.judgedCount ? Math.round((100 * composer.hits) / composer.judgedCount) : 0;
+    text = groove.running
+      ? `Streak ${composer.streak} · best ${composer.best} · ${pct}% of notes hit`
+      : "Press play: the notes start falling after one bar.";
+  } else if (m === "auto") {
+    text = groove.running ? "The melody plays itself. Play along if you like." : "Press play to hear it.";
+  }
+  $("score").textContent = text;
 }
 
 $("lead-volume").addEventListener("input", (e) => lead.set("volume", e.target.value / 100));
@@ -434,9 +499,19 @@ function updateReadout() {
 }
 
 function frame() {
+  composer.sweep(ctx.currentTime);
+  updateScore();
   drawStage($("stage"), {
     now: ctx.currentTime, hits: groove.hits, live: groove.live, running: groove.running,
     filter: djf.amount, lastDrop: groove.lastDrop, held, lead: melody.log,
+    guide: composer.mode === "free" ? null : {
+      notes: composer.notes, feedback: composer.feedback, sixteenth: 60 / groove.bpm / 4,
+      noteFor: (code) => melody.noteFor(code), game: composer.mode === "guide",
+      labelFor: (code) => {
+        const p = melody.place(code);
+        return p ? MELODY_LETTERS[layout][p.r][p.i].toUpperCase() : "";
+      },
+    },
     color: STYLE_COLORS[groove.core.name] || "#8a7fff", colors, analyser: master.analyser,
   });
   drawGrid();

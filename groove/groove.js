@@ -64,6 +64,7 @@ class Groove {
     this.filter = null; // optional DJFilter (the build-up closes it, the drop opens it)
     this.live = { rolling: false, building: false, breaking: false, rollLevel: 0 };
     this.lastDrop = -1; // audio time of the last drop (for the display)
+    this.onStep = null; // optional (i, abs, t, sixteenth) → for the melody composer
   }
 
   // ---- Live controls (keys held down) ----
@@ -267,6 +268,7 @@ class Groove {
     // Swing: the off-sixteenths come a little late.
     const sixteenth = 60 / this.bpm / 4;
     const swung = t + (i % 2 ? this.core.swing * sixteenth : 0);
+    if (this.onStep) this.onStep(i, abs, swung, sixteenth);
 
     for (const lane of GROOVE_LANES) {
       if (!this.on[lane]) continue;

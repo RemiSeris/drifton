@@ -50,6 +50,7 @@
       <div class="key" data-key="Arrows"><kbd>←</kbd><kbd>→</kbd><span>Morph, one instrument per press</span></div>
       <div class="key" data-key="Octave"><kbd id="oct-down">Z</kbd><kbd>X</kbd><span>Melody octave down / up</span></div>
       <div class="key" data-key="Digits"><kbd>1</kbd>…<kbd>6</kbd><span>Mute: kick, snare, hats, perc, bass, keys</span></div>
+      <div class="key" data-key="KeyC"><kbd>C</kbd><span>Melody mode: free, guide, auto</span></div>
       <div class="key" data-key="Enter"><kbd>Enter</kbd><span>Play / stop</span></div>
     </div>
     <p class="help">Gestures wait for the next beat, so they always land in time. For 1…6, use the top row of the keyboard (on AZERTY: &amp; é " ' ( - without Shift) or the numeric keypad.</p>
@@ -57,12 +58,20 @@
 
   <section>
     <h2>Play a melody</h2>
+    <div class="mode-row">
+      <div class="seg" id="mode">
+        <button data-mode="free" class="active">Free</button>
+        <button data-mode="guide">Guide</button>
+        <button data-mode="auto">Auto</button>
+      </div>
+      <span class="score" id="score"></span>
+    </div>
     <div id="piano" class="piano"></div>
     <div class="melody-row">
       <label class="row"><span>Melody volume</span><input type="range" id="lead-volume" min="0" max="100" value="55"></label>
       <span class="octave">Octave <b id="octave-out">0</b></span>
     </div>
-    <p class="help">The two letter rows play the groove's scale, so there is no wrong note. Ringed keys: the root. Dotted keys: the three notes of the chord playing now, good places to land. The top row is the middle row an octave up.</p>
+    <p class="help"><b>Free</b>: you play. <b>Guide</b>: a melody is written for the groove, silently; its notes fall on the stage and light the keys ahead of time, and you play them (Perfect, Good, Miss). <b>Auto</b>: the melody plays itself. <kbd>C</kbd> switches. The two letter rows play the groove's scale, so there is no wrong note. Ringed keys: the root. Dotted keys: the three notes of the chord playing now, good places to land. The top row is the middle row an octave up.</p>
   </section>
 
   <section>
@@ -101,6 +110,7 @@
 <script src="styles.js"></script>
 <script src="groove.js"></script>
 <script src="melody.js"></script>
+<script src="composer.js"></script>
 <script src="stage.js"></script>
 <script src="main.js"></script>
 </body>
