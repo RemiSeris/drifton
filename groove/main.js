@@ -207,8 +207,10 @@ function melodyCode(e) {
 }
 
 // What a key does. Physical code first, then the character, for keyboards and remote
-// desktops that only report one of them. Gestures live on the bottom row (V B N) and
-// the space bar, so the two letter rows above are free for the melody.
+// desktops that only report one of them. Gestures live on the bottom row and the space
+// bar, so the two letter rows above are free for the melody. The octave is on the first
+// two keys of the bottom row, like in Ableton (Z X on QWERTY = W X on AZERTY): some
+// browsers keep the up/down arrows for themselves and never pass them to the page.
 function action(e) {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   if (e.code === "Enter" || k === "Enter") return "play";
@@ -218,8 +220,9 @@ function action(e) {
   if (e.code === "KeyN" || k === "n") return "build";
   if (e.code === "ArrowRight" || k === "ArrowRight") return "right";
   if (e.code === "ArrowLeft" || k === "ArrowLeft") return "left";
-  if (e.code === "ArrowUp" || k === "ArrowUp") return "up";
-  if (e.code === "ArrowDown" || k === "ArrowDown") return "down";
+  if (e.code === "KeyX" || k === "x" || e.code === "ArrowUp" || k === "ArrowUp") return "up";
+  if (e.code === "KeyZ" || (!e.code && k === (layout === "azerty" ? "w" : "z"))
+    || e.code === "ArrowDown" || k === "ArrowDown") return "down";
   if (laneKey(e)) return "lane";
   if (melodyCode(e)) return "note";
   return null;
@@ -277,7 +280,9 @@ function release(act) {
   if (act === "build") groove.buildRelease();
 }
 
-document.addEventListener("keydown", (e) => {
+// Listened in the capture phase, on the window: we get each key before anything else on
+// the page (a focused slider or menu) can use it.
+window.addEventListener("keydown", (e) => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.target.tagName === "SELECT") return; // let an open menu use its own keys
   learnLayout(e);
@@ -287,13 +292,13 @@ document.addEventListener("keydown", (e) => {
   if (document.activeElement && document.activeElement.tagName === "INPUT") document.activeElement.blur();
   if (e.repeat) return; // a held key repeats: we only want the first press
   press(act, e);
-});
+}, true);
 
-document.addEventListener("keyup", (e) => {
+window.addEventListener("keyup", (e) => {
   const act = action(e);
   if (act === "note") melody.release(melodyCode(e));
   else if (act) release(act);
-});
+}, true);
 
 // Switching window or tab while holding a key: we never get its keyup, so let go of all.
 window.addEventListener("blur", () => {
@@ -330,6 +335,7 @@ function renderPiano() {
       el.append(row);
     }
     $("octave-out").textContent = (melody.octave > 0 ? "+" : "") + melody.octave;
+    $("oct-down").textContent = layout === "azerty" ? "W" : "Z";
   }
   for (const k of $("piano").querySelectorAll(".pk")) k.classList.toggle("on", melody.down.has(k.dataset.code));
 }

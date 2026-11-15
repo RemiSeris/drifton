@@ -224,7 +224,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   Une touche tenue reste allumée dans l'encart ; perte du focus = tout est relâché.
 - **Mélodie au clavier** (`groove/melody.js`) : les deux rangées de lettres jouent la gamme
   du morceau (rangée du milieu = 10 notes depuis la fondamentale, rangée du haut = la même
-  une octave au-dessus), donc pas de fausse note ; ↑ ↓ changent d'octave. Touches lues par
+  une octave au-dessus), donc pas de fausse note ; octave sur Z / X comme dans Ableton (W / X en AZERTY ; les
+  flèches ↑ ↓ marchent aussi, mais certains navigateurs les gardent pour eux). Touches lues par
   position physique (`e.code`), avec repli sur le caractère selon la disposition détectée
   (langue, `navigator.keyboard.getLayoutMap`, puis ce que tapent les touches). Son « lead »
   (deux scies désaccordées, vibrato), envoyé dans l'écho comme les accords du style. Clavier
@@ -247,6 +248,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Octave de la mélodie sur Z / X (W / X en AZERTY) : chez un utilisateur, le navigateur gardait ↑ ↓ pour lui. Clavier écouté en phase de capture sur `window`.
 
 - **2026-11-15** — Mélodie jouable au clavier, calée sur la gamme, avec clavier à l'écran et comètes sur la scène ; filtre et montée passés sur V et N.
 
