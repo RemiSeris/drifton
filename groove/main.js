@@ -131,9 +131,19 @@ function setLane(lane, on) {
 }
 
 // ---- Live keyboard ----
-// We read `e.code` (the physical key), not `e.key` (the character): on a French AZERTY
-// keyboard the top row types & é " ' ( - without Shift, but its codes are still
-// Digit1…Digit6.
+// Keyboards don't all say "1" the same way, so the lane keys are recognised by any of:
+// - the physical key `e.code`: Digit1…Digit6 (top row, any layout) or Numpad1…Numpad6
+// - the character `e.key`: 1…6, or what a French AZERTY top row types without Shift:
+//   & é " ' ( -   (some browsers and remote desktops report only the character)
+const AZERTY_ROW = ["&", "é", '"', "'", "(", "-"];
+
+function laneKey(e) {
+  const m = /^(Digit|Numpad)([1-6])$/.exec(e.code);
+  if (m) return Number(m[2]);
+  if (/^[1-6]$/.test(e.key)) return Number(e.key);
+  const i = AZERTY_ROW.indexOf(e.key);
+  return i >= 0 ? i + 1 : 0;
+}
 
 function flashKey(name) {
   const el = document.querySelector(`.key[data-key="${name}"]`);
@@ -144,7 +154,7 @@ function flashKey(name) {
 
 document.addEventListener("keydown", (e) => {
   if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
-  if (e.target.tagName === "SELECT") return; // let menus use their own keys
+  if (e.target.tagName === "SELECT") return; // let an open menu use its own keys
   const code = e.code;
   let handled = true;
   if (code === "Enter") { togglePlay(); flashKey("Enter"); }
@@ -159,8 +169,8 @@ document.addEventListener("keydown", (e) => {
     $("mix").value = Math.round(groove.mix * 100);
     idleUpdate();
     flashKey("Arrows");
-  } else if (/^Digit[1-6]$/.test(code)) {
-    const lane = GROOVE_LANES[Number(code.slice(5)) - 1];
+  } else if (laneKey(e)) {
+    const lane = GROOVE_LANES[laneKey(e) - 1];
     setLane(lane, !groove.on[lane]);
     flashKey("Digits");
   } else handled = false;
@@ -168,6 +178,15 @@ document.addEventListener("keydown", (e) => {
     e.preventDefault(); // no page scroll on Space or arrows, no slider move
     if (document.activeElement && document.activeElement.tagName === "INPUT") document.activeElement.blur();
   }
+});
+
+// After a click on a menu, checkbox or slider, hand the keyboard back to the page:
+// a focused menu would swallow every key, and Space would also tick a focused checkbox.
+document.addEventListener("change", (e) => {
+  if (e.target.matches("select, input[type=checkbox]")) e.target.blur();
+});
+document.addEventListener("pointerup", (e) => {
+  if (e.target.matches("input[type=range], input[type=checkbox]")) setTimeout(() => e.target.blur(), 0);
 });
 
 // ---- Display ----

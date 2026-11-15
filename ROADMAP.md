@@ -216,7 +216,10 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   la fin de la mesure, ou la mesure suivante si trop tard) ; B break (la batterie se tait
   une mesure, basse et accords continuent) ; ← → morph d'un instrument par pression (d'un
   seuil de passage au suivant) ; 1–6 coupe / remet kick, snare, hats, perc, basse, keys.
-  Lecture par `e.code` (touche physique) : les chiffres marchent en AZERTY sans Maj.
+  Touches 1–6 reconnues par la touche physique (`Digit1`…, `Numpad1`…) ou par le caractère
+  (1–6, ou & é " ' ( - en AZERTY, pour les navigateurs et bureaux à distance qui ne donnent
+  que le caractère). Après un clic sur un menu, une case ou un curseur, le focus est rendu
+  à la page (sinon un menu avale les touches et Espace recoche une case).
 - Ordonnanceur plus serré que le générateur (25 ms / 150 ms d'avance) pour réagir vite au
   curseur ; avance allongée quand l'onglet est caché.
 - Pistes : d'autres styles (house, afrobeat en 12/8, trip-hop…), un éditeur de grille à la
@@ -227,6 +230,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Clavier live : les touches 1–6 ne réagissaient pas chez un utilisateur AZERTY ; elles sont maintenant aussi reconnues au pavé numérique et par caractère, et les menus rendent le focus.
 
 - **2026-11-15** — Groove jouable en live au clavier (roulement, break, morph pas à pas, coupures), avec un encart des touches qui s'allument à la frappe.
 
