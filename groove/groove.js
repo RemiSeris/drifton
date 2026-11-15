@@ -1,10 +1,21 @@
-// The groove engine: plays two styles at once, blended by `mix` (0 = style A, 1 = B).
+// The groove engine: plays style A, style B, or a hand-over between them (`mix`, 0..1).
 //
-// Blending works because a style is a grid of probabilities: halfway between funk and
-// dub, a step that funk plays 70% of the time and dub never plays is played 35% of the
-// time. Velocity, swing, tempo, note length and reverb sends are blended the same way.
+// The hand-over works like a DJ or a band changing groove: instruments pass from A to B
+// one at a time, always on a new bar, never half and half. As `mix` rises, the hats go
+// first, then the percussion, the keys, the bass, and last the core of the beat (kick
+// and snare together). Each lane always plays ONE style's grid, so every in-between
+// state is a real groove, not a blur of two.
 //
-// Space: each lane sends to the shared reverb and, for dub, to an echo (see echo.js).
+// The core switch is the big moment: it is announced by a fill (a snare roll on the
+// second half of the bar), the tempo slides to the new style's tempo during that fill,
+// and the new beat lands on the next downbeat. Every 8 bars there is also a short fill
+// (last beat only), the way a drummer marks a phrase.
+//
+// Inside one style nothing changes from before: each bar is drawn again from the grid
+// of chances, so the groove stays itself without repeating exactly.
+//
+// Space: each lane sends to the shared reverb and, for dub, to an echo (see echo.js),
+// with the amounts of the style that owns it.
 //
 // Chords come from the same Harmony as Focus music. The bass picks chord notes as the
 // style asks (root, fifth, octave…) and, at the end of a chord, sometimes slides into
@@ -17,6 +28,10 @@
 
 const GROOVE_LANES = ["kick", "snare", "hat", "perc", "bass", "keys"];
 
+// When each lane hands over to style B as `mix` rises (and back to A as it falls).
+const HANDOVER = { hat: 0.15, perc: 0.3, keys: 0.45, bass: 0.6, kick: 0.8, snare: 0.8 };
+const CORE = ["kick", "snare"];
+
 class Groove {
   constructor(ctx, drums, synths, harmony) {
     this.ctx = ctx;
@@ -27,8 +42,8 @@ class Groove {
     this.b = GROOVE_STYLES.dub;
     this.mix = 0;
     this.bpm = this.a.bpm;
-    this.followTempo = true; // tempo glides between the two styles' tempos
-    this.autoMorph = false;  // mix drifts A → B → A by itself, over 32 bars
+    this.followTempo = true; // tempo = the tempo of the style playing the core
+    this.autoMorph = false;  // mix walks A → B → A by itself, 16 bars each way
     this.autoDir = 1;
     this.on = Object.fromEntries(GROOVE_LANES.map((l) => [l, true]));
     this.running = false;
@@ -37,6 +52,23 @@ class Groove {
     this.onBar = null; // callback for the page
     this.echo = null;     // optional Echo, with one send per synth: { bass, keys }
     this.synthEcho = {};
+    this.owners = this.wanted();
+    this.fill = null; // { from: step, to: style } while a fill is playing
+  }
+
+  // Which style each lane should play for the current `mix`.
+  wanted() {
+    return Object.fromEntries(GROOVE_LANES.map((l) => [l, this.mix >= HANDOVER[l] ? this.b : this.a]));
+  }
+
+  // The style playing the core of the beat: it sets tempo, swing, chord length, echo time.
+  get core() {
+    return this.owners.kick;
+  }
+
+  // Tempo when nothing is playing (shown on the page).
+  restingBpm() {
+    return this.wanted().kick.bpm;
   }
 
   start() {
@@ -45,6 +77,9 @@ class Groove {
     this.step = 0;
     this.bar = 0;
     this.barsInChord = 0;
+    this.owners = this.wanted();
+    this.fill = null;
+    if (this.followTempo) this.bpm = this.core.bpm;
     this.nextStep = this.ctx.currentTime + 0.1;
     this.degree = 0;
     this.keysVoicing = [];
@@ -61,19 +96,9 @@ class Groove {
     this.synths.keys.allOff();
   }
 
-  // A blend of one numeric setting of the two styles.
-  blend(get) {
-    return get(this.a) * (1 - this.mix) + get(this.b) * this.mix;
-  }
-
-  // The style nearest to the current mix, for settings that cannot be blended.
-  nearest() {
-    return this.mix < 0.5 ? this.a : this.b;
-  }
-
   tick() {
-    const ahead = (typeof document !== "undefined" && document.hidden) ? 1.5 : 0.15;
-    const horizon = this.ctx.currentTime + ahead;
+    const hidden = typeof document !== "undefined" && document.hidden;
+    const horizon = this.ctx.currentTime + (hidden ? 1.5 : 0.15);
     while (this.nextStep < horizon) {
       this.playStep(this.step, this.nextStep);
       this.nextStep += 60 / this.bpm / 4; // one sixteenth note
@@ -84,60 +109,60 @@ class Groove {
     this.steps = this.steps.filter((s) => s.t > old);
   }
 
-  playStep(i, t) {
-    if (i === 0) this.startBar(t);
-    this.steps.push({ step: i, t });
-    // Swing: the off-sixteenths come a little late.
-    const sixteenth = 60 / this.bpm / 4;
-    const swung = t + (i % 2 ? this.blend((s) => s.swing) * sixteenth : 0);
-
-    for (const lane of GROOVE_LANES) {
-      if (!this.on[lane]) continue;
-      const A = this.a.lanes[lane], B = this.b.lanes[lane];
-      const wa = A.prob[i] * (1 - this.mix), wb = B.prob[i] * this.mix;
-      const p = wa + wb;
-      if (p === 0 || Math.random() >= p) continue;
-      // Velocity of the blend, weighted by how much each style wants this hit.
-      let v = (wa * A.vel[i] + wb * B.vel[i]) / p;
-      // A human never hits twice exactly the same, nor exactly on time.
-      v = Math.min(1, v * (0.88 + Math.random() * 0.24));
-      const tt = swung + (Math.random() - 0.5) * 0.008;
-      const fromB = Math.random() < wb / p; // which style "owns" this hit
-      this.fire(lane, i, tt, v, fromB ? this.b : this.a);
-      this.hits.push({ lane, step: i, t: tt, v });
-    }
-  }
+  // ---- Bars: hand-over, fills, chords, effects ----
 
   startBar(t) {
-    if (this.bar > 0) {
-      this.barsInChord++;
-      if (this.barsInChord >= this.nearest().chordBars) this.changeChord(t);
-    }
-    if (this.autoMorph) {
-      // Walk 1/16 per bar from wherever the mix is, and turn back at each end:
-      // A → B in 16 bars, B → A in 16 more.
+    if (this.autoMorph && this.bar > 0) {
+      // 1/16 per bar from wherever the mix is, turning back at each end.
       this.mix += this.autoDir / 16;
       if (this.mix >= 1) { this.mix = 1; this.autoDir = -1; }
       if (this.mix <= 0) { this.mix = 0; this.autoDir = 1; }
     }
-    if (this.followTempo) this.bpm = this.blend((s) => s.bpm);
-    for (const lane of DRUM_LANES) this.drums.setSend(lane, this.blend((s) => s.space[lane]));
-    for (const lane of ["bass", "keys"]) this.synths[lane].set("fx.reverb", this.blend((s) => s.space[lane]));
-    if (this.echo) {
-      this.echo.setBeats(this.nearest().echoBeats, this.bpm);
-      for (const lane of DRUM_LANES) this.drums.setEcho(lane, this.blend((s) => s.echo[lane]));
-      for (const lane of ["bass", "keys"]) {
-        setParam(this.ctx, this.synthEcho[lane].gain, this.blend((s) => s.echo[lane]), true);
-      }
+
+    // A fill just ended: the new core lands now.
+    const switching = this.fill && this.fill.to !== this.core;
+    const want = this.wanted();
+    for (const lane of GROOVE_LANES) {
+      if (!CORE.includes(lane)) this.owners[lane] = want[lane];
     }
+    if (this.fill) {
+      for (const lane of CORE) this.owners[lane] = this.fill.to;
+      this.fill = null;
+    }
+
+    // Plan this bar's fill: a long one before a core switch, a short one every 8 bars.
+    if (want.kick !== this.core) {
+      this.fill = { from: 8, to: want.kick, fromBpm: this.bpm };
+    } else if (this.bar % 8 === 7) {
+      this.fill = { from: 12, to: this.core, fromBpm: this.bpm };
+    }
+
+    if (this.bar > 0) {
+      this.barsInChord++;
+      if (switching || this.barsInChord >= this.core.chordBars) this.changeChord(t);
+    }
+    if (this.followTempo && !(this.fill && this.fill.to !== this.core)) this.bpm = this.core.bpm;
+    this.applySends();
     this.bar++;
     if (this.onBar) this.onBar(t);
   }
 
+  // Reverb and echo amounts of the style that owns each lane.
+  applySends() {
+    for (const lane of DRUM_LANES) this.drums.setSend(lane, this.owners[lane].space[lane]);
+    for (const lane of ["bass", "keys"]) this.synths[lane].set("fx.reverb", this.owners[lane].space[lane]);
+    if (!this.echo) return;
+    this.echo.setBeats(this.core.echoBeats, this.bpm);
+    for (const lane of DRUM_LANES) this.drums.setEcho(lane, this.owners[lane].echo[lane]);
+    for (const lane of ["bass", "keys"]) {
+      setParam(this.ctx, this.synthEcho[lane].gain, this.owners[lane].echo[lane], true);
+    }
+  }
+
   changeChord(t) {
     if (this.nextDegree !== undefined) this.degree = this.nextDegree;
-    // The mode follows the nearest style (funk: dorian, dub: aeolian, bossa: major).
-    const mode = this.nearest().mode;
+    // The mode follows whoever plays the harmony (the keys).
+    const mode = this.owners.keys.mode;
     if (mode !== this.harmony.mode) this.harmony.setKey(this.harmony.root, mode);
     if (!this.harmony.usable(this.degree)) this.degree = 0;
     this.tones = this.harmony.chordTones(this.degree);
@@ -148,12 +173,51 @@ class Groove {
     this.barsInChord = 0;
   }
 
+  // ---- Steps ----
+
+  playStep(i, t) {
+    if (i === 0) this.startBar(t);
+    const fill = this.fill && i >= this.fill.from ? this.fill : null;
+    // During a switching fill, the tempo slides step by step towards the new style.
+    if (fill && this.followTempo && fill.to !== this.core) {
+      const k = (i - fill.from + 1) / (16 - fill.from);
+      this.bpm = fill.fromBpm + (fill.to.bpm - fill.fromBpm) * k;
+    }
+    this.steps.push({ step: i, t });
+    // Swing: the off-sixteenths come a little late.
+    const sixteenth = 60 / this.bpm / 4;
+    const swung = t + (i % 2 ? this.core.swing * sixteenth : 0);
+
+    for (const lane of GROOVE_LANES) {
+      if (!this.on[lane]) continue;
+      const style = this.owners[lane];
+      let p = style.lanes[lane].prob[i];
+      let v = style.lanes[lane].vel[i];
+      if (fill && DRUM_LANES.includes(lane)) [p, v] = this.fillHit(lane, i, fill);
+      if (p === 0 || Math.random() >= p) continue;
+      // A human never hits twice exactly the same, nor exactly on time.
+      v = Math.min(1, v * (0.88 + Math.random() * 0.24));
+      const tt = swung + (Math.random() - 0.5) * 0.008;
+      this.fire(lane, i, tt, v, style);
+      this.hits.push({ lane, step: i, t: tt, v });
+    }
+  }
+
+  // A fill replaces the drums: a snare roll that grows louder, the kick on its first
+  // step, nothing else (silence around a roll makes it stand out).
+  fillHit(lane, i, fill) {
+    const k = (i - fill.from) / (16 - fill.from); // 0 → 1 across the fill
+    if (lane === "snare") return [i % 2 ? 0.55 : 0.95, 0.35 + 0.6 * k];
+    if (lane === "kick") return i === fill.from ? [1, 0.85] : [0, 0];
+    return [0, 0];
+  }
+
   // ---- Playing one hit ----
 
   fire(lane, i, t, v, style) {
     if (DRUM_LANES.includes(lane)) return this.drums.play(lane, t, v, style.kit && style.kit[lane]);
     if (lane === "bass") return this.bassNote(i, t, v, style);
-    if (lane === "keys") return this.keysChord(t, v);
+    if (lane === "keys") return this.keysChord(t, v, style);
   }
 
   bassNote(i, t, v, style) {
@@ -162,21 +226,19 @@ class Groove {
     const pick = { R: 0, 3: 1, 5: 2, 7: 3 };
     let note = ch === "8" ? pitchFrom(this.tones[0], 36) + 12 : pitchFrom(this.tones[pick[ch] ?? 0], 36);
     // Last beat before a chord change: half the time, approach the next root.
-    const lastBar = this.barsInChord === this.nearest().chordBars - 1;
+    const lastBar = this.barsInChord === this.core.chordBars - 1;
     if (lastBar && i >= 13 && Math.random() < 0.5) {
       const nextRoot = pitchFrom(this.harmony.pc(this.nextDegree), 36);
       note = nextRoot + (Math.random() < 0.5 ? -1 : 1);
     }
-    const gate = this.blend((s) => s.bassGate);
     this.synths.bass.noteOn(note, v, t);
-    this.synths.bass.noteOff(note, t + gate);
+    this.synths.bass.noteOff(note, t + style.bassGate);
   }
 
-  keysChord(t, v) {
-    const gate = this.blend((s) => s.keysGate);
+  keysChord(t, v, style) {
     for (const n of this.keysVoicing) {
       this.synths.keys.noteOn(n, v * 0.6, t);
-      this.synths.keys.noteOff(n, t + gate);
+      this.synths.keys.noteOff(n, t + style.keysGate);
     }
   }
 

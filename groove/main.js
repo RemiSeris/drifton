@@ -74,14 +74,21 @@ function applyStyles() {
   groove.b = GROOVE_STYLES[$("style-b").value];
   $("name-a").textContent = groove.a.name;
   $("name-b").textContent = groove.b.name;
-  if (groove.followTempo) groove.bpm = groove.blend((s) => s.bpm);
+  idleUpdate();
+}
+
+// While stopped, show (and later start from) what the morph position asks for.
+function idleUpdate() {
+  if (groove.running) return;
+  groove.owners = groove.wanted();
+  if (groove.followTempo) groove.bpm = groove.restingBpm();
 }
 $("style-a").addEventListener("change", applyStyles);
 $("style-b").addEventListener("change", applyStyles);
 
 $("mix").addEventListener("input", (e) => {
   groove.mix = e.target.value / 100;
-  if (groove.followTempo && !groove.running) groove.bpm = groove.blend((s) => s.bpm);
+  idleUpdate();
 });
 
 $("auto").addEventListener("change", (e) => {
@@ -124,7 +131,7 @@ function drawGrid() {
   const { width: W, height: H } = canvas;
   const dpr = devicePixelRatio;
   const now = ctx.currentTime;
-  const labelW = 46 * dpr;
+  const labelW = 58 * dpr;
   const cellW = (W - labelW) / 16;
   const cellH = H / GROOVE_LANES.length;
   const playing = groove.running ? groove.stepAt(now) : null;
@@ -132,15 +139,22 @@ function drawGrid() {
 
   g.font = `${11 * dpr}px sans-serif`;
   g.textBaseline = "middle";
+  const owners = groove.running ? groove.owners : groove.wanted();
   GROOVE_LANES.forEach((lane, r) => {
     const y = r * cellH;
+    const style = owners[lane];
+    // Lane name, and under it the style it is playing right now.
     g.globalAlpha = groove.on[lane] ? 0.9 : 0.3;
     g.fillStyle = colors[lane];
-    g.fillText(LANE_NAMES[lane], 0, y + cellH / 2);
-    const A = groove.a.lanes[lane], B = groove.b.lanes[lane];
+    g.font = `${11 * dpr}px sans-serif`;
+    g.fillText(LANE_NAMES[lane], 0, y + cellH / 2 - 6 * dpr);
+    g.globalAlpha *= 0.6;
+    g.fillStyle = css.getPropertyValue("--fg").trim();
+    g.font = `${9 * dpr}px sans-serif`;
+    g.fillText(style.name.toLowerCase(), 0, y + cellH / 2 + 7 * dpr);
     for (let i = 0; i < 16; i++) {
       const x = labelW + i * cellW;
-      const p = A.prob[i] * (1 - groove.mix) + B.prob[i] * groove.mix;
+      const p = style.lanes[lane].prob[i];
       // Empty cell outline, then a fill as bright as the chance of playing.
       g.globalAlpha = i % 4 === 0 ? 0.16 : 0.08;
       g.fillStyle = css.getPropertyValue("--fg").trim();
@@ -175,11 +189,13 @@ function drawGrid() {
 function updateReadout() {
   const c = groove.running ? groove.chordName : null;
   $("chord").innerHTML = c ? `${c.name}<small>${c.roman}</small>` : "—";
-  const pctB = Math.round(groove.mix * 100);
-  const blend = pctB === 0 ? groove.a.name : pctB === 100 ? groove.b.name
-    : `${groove.a.name} ${100 - pctB}% · ${groove.b.name} ${pctB}%`;
-  $("status").textContent = `${blend} · ${Math.round(groove.bpm)} bpm · ${NOTE_NAMES[harmony.root]} ${harmony.mode}`;
-  if (groove.autoMorph) $("mix").value = pctB;
+  const owners = groove.running ? groove.owners : groove.wanted();
+  const onB = GROOVE_LANES.filter((l) => owners[l] !== groove.a).length;
+  const where = onB === 0 ? groove.a.name : onB === GROOVE_LANES.length ? groove.b.name
+    : `${groove.a.name} → ${groove.b.name} · ${onB}/${GROOVE_LANES.length} on ${groove.b.name}`;
+  const fill = groove.running && groove.fill && groove.fill.to !== groove.core ? " · fill!" : "";
+  $("status").textContent = `${where}${fill} · ${Math.round(groove.bpm)} bpm · ${NOTE_NAMES[harmony.root]} ${harmony.mode}`;
+  if (groove.autoMorph) $("mix").value = Math.round(groove.mix * 100);
   $("bpm-out").textContent = Math.round(groove.bpm);
   if (groove.followTempo) $("bpm").value = Math.round(groove.bpm);
 }

@@ -16,7 +16,7 @@
     <p class="intro">
       Rhythm styles written as grids of chances: each bar is drawn again from the grid,
       so the groove stays itself without ever repeating exactly. Pick two styles and
-      slide between them.
+      morph from one to the other, like a band changing groove.
     </p>
   </header>
 
@@ -41,11 +41,12 @@
     <label class="row"><span>Style A</span><select id="style-a"></select></label>
     <label class="row"><span>Style B</span><select id="style-b"></select></label>
     <label class="row morph"><span>Morph</span><b id="name-a">A</b><input type="range" id="mix" min="0" max="100" value="0"><b id="name-b">B</b></label>
-    <label class="row check"><input type="checkbox" id="auto"><span>Auto morph: drift from A to B and back, over 32 bars</span></label>
+    <p class="help">Morph hands the instruments over one at a time, on the bar: hats, percussion, keys, bass, then the beat itself, announced by a drum fill while the tempo slides.</p>
+    <label class="row check"><input type="checkbox" id="auto"><span>Auto morph: drift from A to B and back, 16 bars each way</span></label>
     <label class="row"><span>Tempo</span><input type="range" id="bpm" min="60" max="140" value="98"><output id="bpm-out"></output></label>
     <label class="row check"><input type="checkbox" id="follow" checked><span>Tempo follows the styles</span></label>
     <label class="row"><span>Key</span><select id="key"></select></label>
-    <p class="help">The chords' mode follows the nearest style: dorian for funk, aeolian for dub, major for bossa nova.</p>
+    <p class="help">The chords' mode follows the style playing the keys: dorian for funk, aeolian for dub, major for bossa nova.</p>
   </section>
 
   <section>

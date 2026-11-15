@@ -190,9 +190,16 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   toujours) et 16 de vélocité ; la basse a en plus la note à jouer (`R`, `3`, `5`, `7`,
   `8`). Plus : tempo, swing, mesures par accord, mode, longueur des notes, envois réverbe.
   Chaque mesure est tirée de nouveau dans la grille : reconnaissable, jamais identique.
-- **Morph** : deux styles A et B, un curseur. Les probabilités, vélocités, swing, tempo,
-  longueurs et envois sont interpolés ; le mode suit le style le plus proche, au
-  changement d'accord. Auto morph : 1/16 par mesure, aller-retour.
+- **Morph** : deux styles A et B, un curseur. Les instruments passent de A à B **un par un,
+  sur la mesure**, comme un groupe qui change de groove : hats (15 %), perc (30 %), keys
+  (45 %), basse (60 %), puis le cœur kick + snare (80 %). Chaque piste joue toujours la
+  grille d'un seul style. Le passage du cœur est annoncé par un roulement de caisse claire
+  sur la deuxième moitié de la mesure, pendant lequel le tempo glisse vers celui du nouveau
+  style ; petit roulement toutes les 8 mesures. Le style du cœur fixe tempo, swing, durée
+  des accords, temps d'écho ; le mode suit le style des accords (keys). Auto morph : 1/16
+  par mesure, aller-retour.
+  (Première version abandonnée : interpoler les probabilités des deux grilles. À 50 %,
+  chaque piste tirait la moitié des coups de chaque style : ni funk ni dub, un flou.)
 - **Basse** : notes de l'accord en cours ; dans la dernière mesure d'un accord, une fois sur
   deux, approche chromatique (un demi-ton) vers la fondamentale suivante.
 - **Batterie** (`synth/drums.js`) : kick (sinus qui tombe de 160 à 48 Hz + clic), snare
@@ -215,6 +222,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Morph refait : passage piste par piste sur la mesure au lieu du mélange des probabilités (qui donnait un groove flou et un tempo qui glissait à chaque mesure), roulement avant le changement de batterie, roulement court toutes les 8 mesures.
 
 - **2026-11-15** — Dub : le souffle venait de la caisse claire, seule une fois par mesure à 74 bpm, envoyée dans la réverbe. Rimshot à la place (part au-dessus de 3 kHz : −8,6 → −32,5 dB) et écho à bande (`synth/echo.js`) au lieu de la réverbe. Funk inchangé.
 
