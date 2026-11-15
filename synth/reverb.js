@@ -1,6 +1,6 @@
 // Reverb: the sound of a room, shared by every instrument.
 //
-//   send ──> pre-delay ──> low cut ──> convolver ──> output (into the MasterBus)
+//   send ──> pre-delay ──> low cut ──> high cut ──> convolver ──> output (into the MasterBus)
 //
 // A ConvolverNode plays its input through an "impulse response" (IR): what a room
 // sounds like after a single click. We don't load a recording, we compute one:
@@ -13,6 +13,7 @@
 //
 // - pre-delay: a short gap before the tail starts, so the dry note stays clear
 // - low cut: no bass in the tail, otherwise the low end turns to mud
+// - high cut: no hiss in the tail either, otherwise every hit leaves a cymbal-like wash
 // - size: changing it builds a new IR and crossfades to it, so there is no cut
 
 class Reverb {
@@ -30,9 +31,14 @@ class Reverb {
     this.lowcut.type = "highpass";
     this.lowcut.frequency.value = 180;
     this.lowcut.Q.value = -3; // no resonant bump
+    this.highcut = ctx.createBiquadFilter();
+    this.highcut.type = "lowpass";
+    this.highcut.frequency.value = 5000;
+    this.highcut.Q.value = -3;
 
     this.input.connect(this.predelay);
     this.predelay.connect(this.lowcut);
+    this.lowcut.connect(this.highcut);
 
     this.room = null; // { convolver, gain } currently heard
     this.seconds = 0;
@@ -49,7 +55,7 @@ class Reverb {
     const convolver = this.ctx.createConvolver();
     convolver.buffer = makeRoomIR(this.ctx, seconds);
     const gain = this.ctx.createGain();
-    this.lowcut.connect(convolver);
+    this.highcut.connect(convolver);
     convolver.connect(gain);
     gain.connect(this.output);
 
@@ -63,7 +69,7 @@ class Reverb {
       holdAt(old.gain.gain, t);
       old.gain.gain.linearRampToValueAtTime(0, t + fade);
       setTimeout(() => {
-        this.lowcut.disconnect(old.convolver);
+        this.highcut.disconnect(old.convolver);
         old.convolver.disconnect();
         old.gain.disconnect();
       }, (fade + 0.2) * 1000);

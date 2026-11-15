@@ -196,7 +196,9 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 - **Basse** : notes de l'accord en cours ; dans la dernière mesure d'un accord, une fois sur
   deux, approche chromatique (un demi-ton) vers la fondamentale suivante.
 - **Batterie** (`synth/drums.js`) : kick (sinus qui tombe de 160 à 48 Hz + clic), snare
-  (bruit filtré + triangle), hat (bruit très aigu, ouvert si vélocité forte), perc (clave).
+  (bruit en passe-bande + deux triangles), hat façon TR-808 (six carrés désaccordés, filtrés
+  vers 7–12 kHz ; ouvert si vélocité forte), perc (clave). Les hats restent secs : en bruit
+  blanc et dans la réverbe, ils sonnaient comme une cymbale qui traîne.
 - Ordonnanceur plus serré que le générateur (25 ms / 150 ms d'avance) pour réagir vite au
   curseur ; avance allongée quand l'onglet est caché.
 - Pistes : d'autres styles (house, afrobeat en 12/8, trip-hop…), un éditeur de grille à la
@@ -207,6 +209,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-15** — Batterie du Groove resserrée : hat en bruit blanc (63 % de l'énergie au-dessus de 12 kHz, effet « cymbale ») remplacé par un hat métallique façon 808, centré vers 9 kHz ; snare en passe-bande ; plus de réverbe sur les hats ni le kick ; mixage par piste ; la réverbe partagée coupe les aigus au-dessus de 5 kHz.
 
 - **2026-11-15** — Groove (Lab) : styles rythmiques en grilles de probabilités (funk, dub, bossa nova), morph A ↔ B (tempo compris), batterie synthétisée, basse avec approches chromatiques. Testé par rendu hors ligne de chaque style et d'un morph funk → dub, et dans Chrome (pas d'erreur, contrôles OK).
 
