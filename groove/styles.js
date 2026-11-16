@@ -77,6 +77,94 @@ const GROOVE_STYLES = {
       keys:  { p: "X..6..X...7..6..", v: "6..5..6...6..5.." },
     },
   },
+
+  house: {
+    name: "House",
+    bpm: 122, swing: 0.04, chordBars: 2, mode: "dorian",
+    bassGate: 0.12, keysGate: 0.12,
+    kit: { snare: "clap" },
+    space: { kick: 0, snare: 0.2, hat: 0, perc: 0.15, bass: 0, keys: 0.3 },
+    echo: { kick: 0, snare: 0, hat: 0, perc: 0, bass: 0, keys: 0.12 }, echoBeats: 0.75,
+    lanes: {
+      //      "1e&a2e&a3e&a4e&a"
+      kick:  { p: "X...X...X...X...", v: "9...9...9...9..." }, // four on the floor
+      snare: { p: "....X.......X...", v: "....8.......8..." }, // clap on 2 and 4
+      hat:   { p: "..X...X...X...X.", v: "..X...X...X...X." }, // open hat on every "and"
+      perc:  { p: "......3.......4.", v: "......5.......6." },
+      bass:  { p: "..X...X...X...X.", v: "..8...8...8...8.", n: "..R...R...8...R." }, // off-beat bass
+      keys:  { p: "..7..5....7..5..", v: "..7..6....7..6.." }, // chord stabs
+    },
+  },
+
+  afrobeat: {
+    name: "Afrobeat",
+    bpm: 108, swing: 0.06, chordBars: 4, mode: "dorian",
+    bassGate: 0.15, keysGate: 0.07,
+    kit: { perc: "bell" },
+    space: { kick: 0, snare: 0.1, hat: 0, perc: 0.1, bass: 0, keys: 0.15 },
+    echo: { kick: 0, snare: 0, hat: 0, perc: 0, bass: 0, keys: 0 }, echoBeats: 0.75,
+    lanes: {
+      //      "1e&a2e&a3e&a4e&a"
+      kick:  { p: "X.....5.X.3...6.", v: "9.....6.8.5...6." },
+      snare: { p: "....X..3...4X..3", v: "....8..3...38..3" },
+      hat:   { p: "X7X7X7X7X7X7X7X7", v: "6363636363636363" }, // busy shaker-like hats
+      perc:  { p: "X.X.X.X.X.X.X.X.", v: "7.4.6.4.7.4.6.4." }, // the cowbell keeps time
+      bass:  { p: "X..6..X...7.X.5.", v: "9..6..8...7.8.5.", n: "R..5..8...7.R.5." },
+      keys:  { p: ".7.6.7.6.7.6.7.6", v: ".6.5.6.5.6.5.6.5" }, // guitar chops on the off-16ths
+    },
+  },
+
+  boombap: {
+    name: "Boom bap",
+    bpm: 90, swing: 0.22, chordBars: 2, mode: "aeolian",
+    bassGate: 0.4, keysGate: 0.9,
+    space: { kick: 0, snare: 0.2, hat: 0, perc: 0.1, bass: 0, keys: 0.3 },
+    echo: { kick: 0, snare: 0, hat: 0, perc: 0, bass: 0, keys: 0 }, echoBeats: 0.75,
+    lanes: {
+      //      "1e&a2e&a3e&a4e&a"
+      kick:  { p: "X......5.X...3..", v: "9......6.8...5.." },
+      snare: { p: "....X.......X...", v: "....9.......9..." },
+      hat:   { p: "X.X.X.X.X.X.X.X.", v: "6.4.6.4.6.4.6.4." }, // heavy swing makes them lazy
+      perc:  { p: "..............3.", v: "..............5." },
+      bass:  { p: "X.......X.....5.", v: "8.......7.....5.", n: "R.......R.....5." },
+      keys:  { p: "X.......5.......", v: "6.......5......." }, // long jazzy chords
+    },
+  },
+
+  triphop: {
+    name: "Trip-hop",
+    bpm: 78, swing: 0.1, chordBars: 4, mode: "aeolian",
+    bassGate: 0.6, keysGate: 1.6,
+    space: { kick: 0, snare: 0.25, hat: 0, perc: 0.3, bass: 0, keys: 0.4 },
+    echo: { kick: 0, snare: 0.3, hat: 0, perc: 0.4, bass: 0, keys: 0.2 }, echoBeats: 0.75,
+    lanes: {
+      //      "1e&a2e&a3e&a4e&a"
+      kick:  { p: "X.......X.X.....", v: "9.......7.6....." },
+      snare: { p: "....X.......X...", v: "....8.......8..." },
+      hat:   { p: "..5...5...5...5.", v: "..3...3...3...3." },
+      perc:  { p: ".......3.......4", v: ".......4.......4" },
+      bass:  { p: "X.........X.....", v: "8.........7.....", n: "R.........5....." },
+      keys:  { p: "X...............", v: "5..............." }, // one long chord per bar
+    },
+  },
+
+  reggaeton: {
+    name: "Reggaeton",
+    bpm: 94, swing: 0, chordBars: 1, mode: "aeolian",
+    bassGate: 0.25, keysGate: 0.12,
+    kit: { snare: "clap" },
+    space: { kick: 0, snare: 0.15, hat: 0, perc: 0.1, bass: 0, keys: 0.2 },
+    echo: { kick: 0, snare: 0, hat: 0, perc: 0, bass: 0, keys: 0 }, echoBeats: 0.75,
+    lanes: {
+      //      "1e&a2e&a3e&a4e&a"
+      kick:  { p: "X...X...X...X...", v: "9...8...9...8..." },
+      snare: { p: "...X..X....X..X.", v: "...8..7....8..7." }, // the dembow
+      hat:   { p: "X.X.X.X.X.X.X.X.", v: "5.3.5.3.5.3.5.3." },
+      perc:  { p: "......4.......4.", v: "......5.......5." },
+      bass:  { p: "X..5..X.X..5..X.", v: "8..5..6.8..5..6.", n: "R..R..5.R..R..5." },
+      keys:  { p: "X..6..X...6..6..", v: "6..5..6...5..5.." },
+    },
+  },
 };
 
 // Turn the strings into numbers once, and check them: a typo in a grid should say

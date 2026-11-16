@@ -72,6 +72,31 @@ const LEAD_SOUNDS = {
     "filter.cutoff": 2600, "filter.res": 0.1, "filter.env": 0.3, "fenv.sustain": 0.6,
     "amp.attack": 0.035, "amp.decay": 0.3, "amp.sustain": 0.75, "amp.release": 0.3, "mod1.amount": 0.025,
   },
+  House: { // bright piano-ish pluck
+    "a.wave": "square", "a.unison": 1, "a.level": 0.35, "b.wave": "triangle", "b.level": 0.35,
+    "filter.cutoff": 2200, "filter.res": 0.2, "filter.env": 1.8, "fenv.decay": 0.25, "fenv.sustain": 0.2,
+    "amp.attack": 0.003, "amp.decay": 0.35, "amp.sustain": 0.3, "amp.release": 0.15, "mod1.amount": 0,
+  },
+  Afrobeat: { // a small horn section: two saws, a slower attack
+    "a.wave": "sawtooth", "a.unison": 2, "a.spread": 0.12, "a.level": 0.45, "b.wave": "square", "b.level": 0.15,
+    "filter.cutoff": 1700, "filter.res": 0.15, "filter.env": 1.5, "fenv.attack": 0.03, "fenv.decay": 0.2, "fenv.sustain": 0.5,
+    "amp.attack": 0.025, "amp.decay": 0.2, "amp.sustain": 0.8, "amp.release": 0.12, "mod1.amount": 0.01,
+  },
+  "Boom bap": { // a soft electric piano
+    "a.wave": "sine", "a.unison": 1, "a.level": 0.6, "b.wave": "triangle", "b.octave": 1, "b.level": 0.15,
+    "filter.cutoff": 2000, "filter.res": 0.1, "filter.env": 0.8, "fenv.decay": 0.5, "fenv.sustain": 0.3,
+    "amp.attack": 0.004, "amp.decay": 0.8, "amp.sustain": 0.35, "amp.release": 0.35, "mod1.amount": 0,
+  },
+  "Trip-hop": { // a lonely, wobbly sine, like a theremin
+    "a.wave": "sine", "a.unison": 1, "a.level": 0.7, "b.wave": "triangle", "b.level": 0.15,
+    "filter.cutoff": 1800, "filter.res": 0.1, "filter.env": 0.2,
+    "amp.attack": 0.08, "amp.decay": 0.4, "amp.sustain": 0.85, "amp.release": 0.5, "mod1.amount": 0.04,
+  },
+  Reggaeton: { // a marimba-like pluck
+    "a.wave": "triangle", "a.unison": 1, "a.level": 0.6, "b.wave": "sine", "b.octave": 2, "b.level": 0.12,
+    "filter.cutoff": 3000, "filter.res": 0.1, "filter.env": 0.5, "fenv.decay": 0.15, "fenv.sustain": 0,
+    "amp.attack": 0.002, "amp.decay": 0.25, "amp.sustain": 0.05, "amp.release": 0.15, "mod1.amount": 0,
+  },
 };
 const lead = new Synth(ctx, LEAD_PATCH, master.input, master.send);
 let leadSound = "";
@@ -111,7 +136,10 @@ for (const lane of ["bass", "keys"]) {
 const $ = (id) => document.getElementById(id);
 const css = getComputedStyle(document.documentElement);
 const colors = Object.fromEntries([...GROOVE_LANES, "lead"].map((l) => [l, css.getPropertyValue(`--c-${l}`).trim()]));
-const STYLE_COLORS = { Funk: "#f2b56d", Dub: "#4fb8a8", "Bossa nova": "#c4bdff" };
+const STYLE_COLORS = {
+  Funk: "#f2b56d", Dub: "#4fb8a8", "Bossa nova": "#c4bdff", House: "#5ec4f2",
+  Afrobeat: "#f2c46d", "Boom bap": "#ff9a76", "Trip-hop": "#7a8cff", Reggaeton: "#ff7a9a",
+};
 const LANE_NAMES = { kick: "Kick", snare: "Snare", hat: "Hats", perc: "Perc", bass: "Bass", keys: "Keys" };
 
 // ---- Transport ----

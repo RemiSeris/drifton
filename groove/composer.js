@@ -35,6 +35,27 @@ const PHRASES = {
     cadences: ["x--x--x---------", "..x--x--x-------"],
     sevenths: true, // bossa melodies love the 7th of the chord
   },
+  House: { // short piano-like riffs that answer the off-beat bass
+    motifs: ["x.x...x...x.x...", "..x-..x-..x-..x-", "x--.x--.x---....", "....x-x-....x-x-"],
+    cadences: ["x-x-x-----------", "..x-..x---------"],
+  },
+  Afrobeat: { // horn lines: punchy, repeated, call and response
+    motifs: ["x.x.x...x.x.....", "..x.x.x-....x.x.", "x-..x-..x.x.x...", "....x.x.x-x-...."],
+    cadences: ["x.x.x-----------", "....x.x.x-------"],
+  },
+  "Boom bap": { // laid back, few notes, behind the beat (the swing does that)
+    motifs: ["x---....x-x-....", "....x-x---......", "..x---....x---..", "x-x---......x---"],
+    cadences: ["x---------------", "....x-----------"],
+    sevenths: true,
+  },
+  "Trip-hop": { // slow, long, lonely notes with lots of space
+    motifs: ["x-------........", "........x-----x-", "....x---x-------", "x---....x---...."],
+    cadences: ["x---------------", "........x-------"],
+  },
+  Reggaeton: { // follows the dembow's syncopation
+    motifs: ["...x..x....x..x.", "x..x..x.x.......", "...x..x-x-......", "x-.x-.x-........"],
+    cadences: ["...x..x---------", "x..x..x---------"],
+  },
 };
 const MELODY_RANGE = [66, 84]; // MIDI: above the keys, below shrill
 // Pentatonic = these scale steps (0-based) of each mode: no half steps between them.

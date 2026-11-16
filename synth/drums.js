@@ -13,6 +13,11 @@
 //          harmonics clash into a metallic shimmer, then only the top is kept. Much
 //          tighter and less "hissy" than plain white noise, which sounds like a wash.
 // - perc:  a short high sine, like a clave or a rim click
+// - clap:  a variant of the snare lane (house, reggaeton): three tiny bursts of noise
+//          a hundredth of a second apart (several hands that never clap exactly together),
+//          then a short tail
+// - bell:  a variant of the perc lane (afrobeat): the 808 cowbell, two square waves
+//          (540 and 800 Hz) through a band-pass
 // - rim:   a variant of the snare lane (dub's cross-stick): a short wooden knock,
 //          almost no noise, so it never hisses even in a slow, sparse groove
 
@@ -68,6 +73,8 @@ class Drums {
     const out = this.lanes[name].gain;
     if (name === "kick") this.kick(t, velocity, out);
     else if (name === "snare" && sound === "rim") this.rim(t, velocity, out);
+    else if (name === "snare" && sound === "clap") this.clap(t, velocity, out);
+    else if (name === "perc" && sound === "bell") this.bell(t, velocity, out);
     else if (name === "snare") this.snare(t, velocity, out);
     else if (name === "hat") this.hat(t, velocity, out, velocity > 0.85);
     else this.perc(t, velocity, out);
@@ -90,6 +97,29 @@ class Drums {
       osc.frequency.exponentialRampToValueAtTime(f * 0.8, t + 0.06);
       this.hit(osc, [], out, t, v * level, 0.001, 0.08);
     }
+  }
+
+  clap(t, v, out) {
+    for (let k = 0; k < 3; k++) this.noiseHit("bandpass", 1300, out, t + k * 0.011, v * 0.9, 0.011);
+    this.noiseHit("bandpass", 1300, out, t + 0.033, v * 0.8, 0.13);
+  }
+
+  bell(t, v, out) {
+    const ctx = this.ctx;
+    const mixer = ctx.createGain();
+    mixer.gain.value = 0.5;
+    const oscs = [540, 800].map((f) => {
+      const o = ctx.createOscillator();
+      o.type = "square";
+      o.frequency.value = f;
+      o.connect(mixer);
+      return o;
+    });
+    const band = ctx.createBiquadFilter();
+    band.type = "bandpass";
+    band.frequency.value = 800;
+    band.Q.value = 1.5;
+    this.hit(mixer, [band], out, t, v * 0.6, 0.001, 0.14, 0, oscs);
   }
 
   rim(t, v, out) {

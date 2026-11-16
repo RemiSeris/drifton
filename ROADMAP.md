@@ -81,7 +81,7 @@ valeur de ces paramètres au moment du clic.
 | `pads/` | prototype « nappe en 3 états » : crossfade d'exports audio piloté par un conducteur, couche granulaire, modulation d'amplitude. Exploration, a mené aux décisions ci-dessus |
 | `synth/` | synthé maison, construit brique par brique (voir étapes) |
 | `generator/` | générateur : 4 instruments du synthé joués par des règles. `harmony.js` (modes, accords par empilement de tierces, chaîne de Markov, voice leading), `generator.js` (rôles pad / basse / cloches / texture, ordonnanceur à anticipation), `main.js` (page, piano roll). Réutilise les fichiers de `synth/` |
-| `groove/` | « Groove » (Lab) : styles rythmiques (funk, dub, bossa nova) écrits en grilles de probabilités sur 16 pas, mélangés par un curseur A ↔ B. Batterie synthétisée (`synth/drums.js`), basse et accords sur `generator/harmony.js`. Voir « Groove » plus bas |
+| `groove/` | « Groove » (Lab) : styles rythmiques (funk, dub, bossa nova, house, afrobeat, boom bap, trip-hop, reggaeton) écrits en grilles de probabilités sur 16 pas, mélangés par un curseur A ↔ B. Batterie synthétisée (`synth/drums.js`), basse et accords sur `generator/harmony.js`. Voir « Groove » plus bas |
 | `score/` | lecteur de partition MIDI pour s'entraîner au piano (v1, voir « Autres axes ») |
 
 Organisation de `synth/` (un fichier = une brique, ordre de chargement dans `index.html`) :
@@ -258,7 +258,13 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   que le mix.
 - Ordonnanceur plus serré que le générateur (25 ms / 150 ms d'avance) pour réagir vite au
   curseur ; avance allongée quand l'onglet est caché.
-- Pistes : d'autres styles (house, afrobeat en 12/8, trip-hop…), un éditeur de grille à la
+- **Huit styles** : funk, dub, bossa nova, puis house (kick à chaque temps, clap, charleston
+  ouvert et basse sur les contretemps), afrobeat (cloche façon 808, charlestons serrés,
+  hachures de guitare sur les doubles croches), boom bap (gros swing, accords longs façon
+  piano électrique), trip-hop (lent, beaucoup d'espace, écho), reggaeton (dembow au clap,
+  un accord par mesure). Chacun a ses phrases de mélodie et son son de lead. Nouveaux sons
+  de batterie : clap et cloche (variantes `kit`).
+- Pistes : afrobeat en vrai 12/8 (la grille est en 16 pas), un éditeur de grille à la
   souris, le LLM de l'étape 7b qui bouge le curseur (« plus funky »).
 
 ## En ligne
@@ -266,6 +272,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-16** — Cinq nouveaux styles : house, afrobeat, boom bap, trip-hop, reggaeton ; clap et cloche dans la batterie. Mélodie mesurée sur chacun : 0 % de notes tenues qui frottent, 100 % des temps forts sur l'accord.
 
 - **2026-11-15** — Mélodie v2 : la v1 « ne collait pas » (marche au hasard sur les 7 notes, dans le registre des accords, sans silences). Notes de l'accord sur les temps forts, pentatonique sans frottement, registre au-dessus des accords, rythmes par style avec silences, son du lead par style.
 
