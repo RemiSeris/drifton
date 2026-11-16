@@ -98,14 +98,60 @@ const LEAD_SOUNDS = {
     "amp.attack": 0.002, "amp.decay": 0.25, "amp.sustain": 0.05, "amp.release": 0.15, "mod1.amount": 0,
   },
 };
-const lead = new Synth(ctx, LEAD_PATCH, master.input, master.send);
+// Instruments you can pick for the melody (or "Auto": the sound follows the style).
+// All made with the same little synth: two oscillators, a filter, envelopes, LFOs.
+const INSTRUMENTS = {
+  piano: { label: "Piano", sound: { // a hammer: bright attack that fades, no sustain
+    "a.wave": "triangle", "a.unison": 1, "a.level": 0.6, "b.wave": "square", "b.octave": 1, "b.level": 0.12,
+    "filter.cutoff": 1800, "filter.res": 0.1, "filter.env": 1.6, "fenv.attack": 0.001, "fenv.decay": 0.9, "fenv.sustain": 0,
+    "amp.attack": 0.002, "amp.decay": 1.4, "amp.sustain": 0.12, "amp.release": 0.35, "mod1.amount": 0,
+  } },
+  epiano: { label: "Electric piano", sound: { // soft bell tone, with tremolo
+    "a.wave": "sine", "a.unison": 1, "a.level": 0.65, "b.wave": "triangle", "b.octave": 1, "b.level": 0.2,
+    "filter.cutoff": 2200, "filter.res": 0.1, "filter.env": 0.8, "fenv.decay": 0.6, "fenv.sustain": 0.2,
+    "amp.attack": 0.003, "amp.decay": 1.2, "amp.sustain": 0.3, "amp.release": 0.4, "mod1.amount": 0,
+    "lfo2.shape": "sine", "lfo2.rate": 4.5, "mod2.src": "lfo2", "mod2.dst": "amp", "mod2.amount": 0.25,
+  } },
+  organ: { label: "Organ", sound: { // two "drawbars" (fundamental + octave), no decay, a rotating-speaker wobble
+    "a.wave": "sine", "a.unison": 1, "a.level": 0.42, "b.wave": "sine", "b.octave": 1, "b.level": 0.33,
+    "filter.cutoff": 4000, "filter.res": 0, "filter.env": 0,
+    "amp.attack": 0.006, "amp.decay": 0.1, "amp.sustain": 1, "amp.release": 0.06, "mod1.amount": 0.008,
+    "lfo2.shape": "sine", "lfo2.rate": 6.5, "mod2.src": "lfo2", "mod2.dst": "amp", "mod2.amount": 0.15,
+  } },
+  clavinet: { label: "Clavinet", sound: LEAD_SOUNDS.Funk },
+  synth: { label: "Synth lead", sound: {} }, // the base patch: detuned saws and vibrato
+  strings: { label: "Strings", sound: { // many detuned saws, slow bow
+    "a.wave": "sawtooth", "a.unison": 3, "a.spread": 0.25, "a.width": 0.8, "a.level": 0.4, "b.level": 0,
+    "filter.cutoff": 2400, "filter.res": 0.1, "filter.env": 0.3,
+    "amp.attack": 0.25, "amp.decay": 0.5, "amp.sustain": 0.85, "amp.release": 0.7, "mod1.amount": 0.02,
+  } },
+  brass: { label: "Brass", sound: LEAD_SOUNDS.Afrobeat },
+  flute: { label: "Flute", sound: { ...LEAD_SOUNDS["Bossa nova"], "noise.level": 0.08 } }, // + breath
+  melodica: { label: "Melodica", sound: LEAD_SOUNDS.Dub },
+  marimba: { label: "Marimba", sound: LEAD_SOUNDS.Reggaeton },
+  bells: { label: "Bells", sound: { // pure tones with a high partial, long ring
+    "a.wave": "sine", "a.unison": 1, "a.level": 0.6, "b.wave": "sine", "b.octave": 2, "b.level": 0.35,
+    "filter.cutoff": 6000, "filter.res": 0, "filter.env": 0,
+    "amp.attack": 0.002, "amp.decay": 1.8, "amp.sustain": 0, "amp.release": 1.2, "mod1.amount": 0, "fx.reverb": 0.5,
+  } },
+  theremin: { label: "Theremin", sound: LEAD_SOUNDS["Trip-hop"] },
+};
+
+// A copy: the synth edits its params in place, the base patch must stay clean.
+const lead = new Synth(ctx, { ...LEAD_PATCH }, master.input, master.send);
+let instrument = "auto"; // or a key of INSTRUMENTS
 let leadSound = "";
-function applyLeadSound(name) {
-  if (name === leadSound) return;
-  leadSound = name;
+let leadToast = null;    // { text, t } shown on the stage when the sound changes
+function applyLeadSound(styleName) {
+  const key = instrument === "auto" ? "style:" + styleName : instrument;
+  if (key === leadSound) return;
+  leadSound = key;
+  const sound = instrument === "auto" ? LEAD_SOUNDS[styleName] || {} : INSTRUMENTS[instrument].sound;
   const volume = lead.params.volume; // keep the user's melody volume
-  Object.assign(lead.params, LEAD_PATCH, LEAD_SOUNDS[name] || {}, { volume });
-  lead.applyAll();
+  lead.loadPatch({ ...LEAD_PATCH, ...sound, volume });
+  if (groove.running || instrument !== "auto") {
+    leadToast = { text: instrument === "auto" ? `${styleName} sound` : INSTRUMENTS[instrument].label, t: ctx.currentTime };
+  }
 }
 applyLeadSound(groove.core.name);
 const melody = new Melody(ctx, lead, harmony);
@@ -281,6 +327,7 @@ function action(e) {
   if (e.code === "KeyV" || k === "v") return "filter";
   if (e.code === "KeyN" || k === "n") return "build";
   if (e.code === "KeyC" || k === "c") return "mode";
+  if (e.code === "KeyM" || (!e.code && k === (layout === "azerty" ? "," : "m"))) return "instrument";
   if (e.code === "ArrowRight" || k === "ArrowRight") return "right";
   if (e.code === "ArrowLeft" || k === "ArrowLeft") return "left";
   if (e.code === "KeyX" || k === "x" || e.code === "ArrowUp" || k === "ArrowUp") return "up";
@@ -293,7 +340,8 @@ function action(e) {
 
 // The key panel: a key stays lit while it is held.
 const CHIP = { play: "Enter", roll: "Space", break: "KeyB", filter: "KeyV", build: "KeyN",
-  right: "Arrows", left: "Arrows", up: "Octave", down: "Octave", lane: "Digits", mode: "KeyC" };
+  right: "Arrows", left: "Arrows", up: "Octave", down: "Octave", lane: "Digits", mode: "KeyC",
+  instrument: "KeyM" };
 const held = new Set();
 function chip(act, on) {
   const el = document.querySelector(`.key[data-key="${CHIP[act]}"]`);
@@ -312,6 +360,11 @@ function press(act, e) {
     // Judge against what you hear: the sound leaves the speakers a bit after ctx time.
     composer.judge(code, ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0));
     return;
+  }
+  if (act === "instrument") {
+    const order = ["auto", ...Object.keys(INSTRUMENTS)];
+    setInstrument(order[(order.indexOf(instrument) + 1) % order.length]);
+    return tapChip(act);
   }
   if (act === "mode") {
     const order = ["free", "guide", "auto"];
@@ -411,6 +464,7 @@ function renderPiano() {
     }
     $("octave-out").textContent = (melody.octave > 0 ? "+" : "") + melody.octave;
     $("oct-down").textContent = layout === "azerty" ? "W" : "Z";
+    $("inst-key").textContent = layout === "azerty" ? "," : "M";
   }
   // Lit: held by you, or sounding from the composer (Auto).
   const now = ctx.currentTime;
@@ -465,6 +519,18 @@ function updateScore() {
 }
 
 $("lead-volume").addEventListener("input", (e) => lead.set("volume", e.target.value / 100));
+
+// ---- Melody instrument ----
+
+$("instrument").append(new Option("Auto (follows the style)", "auto"));
+for (const [key, inst] of Object.entries(INSTRUMENTS)) $("instrument").append(new Option(inst.label, key));
+function setInstrument(key) {
+  instrument = key;
+  $("instrument").value = key;
+  leadSound = ""; // force a reload
+  applyLeadSound(groove.core.name);
+}
+$("instrument").addEventListener("change", (e) => setInstrument(e.target.value));
 
 // After a click on a menu, checkbox or slider, hand the keyboard back to the page:
 // a focused menu would swallow every key, and Space would also tick a focused checkbox.
@@ -564,6 +630,7 @@ function frame() {
     now: ctx.currentTime, hits: groove.hits, live: groove.live, running: groove.running,
     filter: djf.amount, lastDrop: groove.lastDrop, held, lead: melody.log,
     latched: groove.latched && !held.has("build"),
+    toast: leadToast,
     guide: composer.mode === "free" ? null : {
       notes: composer.notes, feedback: composer.feedback, sixteenth: 60 / groove.bpm / 4,
       noteFor: (code) => melody.noteFor(code), game: composer.mode === "guide",

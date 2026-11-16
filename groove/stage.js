@@ -240,6 +240,17 @@ function drawStage(canvas, s) {
     }
   }
 
+  // The melody's instrument just changed: its name, top left, fading.
+  if (s.toast) {
+    const age = s.now - s.toast.t;
+    if (age >= 0 && age < 1.6) {
+      g.globalAlpha = Math.min(1, 2 * (1 - age / 1.6));
+      g.fillStyle = s.colors.lead;
+      g.font = `600 ${16 * dpr}px sans-serif`;
+      g.fillText("♪ " + s.toast.text, 14 * dpr, 24 * dpr);
+    }
+  }
+
   // Drop: white flash and the word.
   if (dropping) {
     const a = 1 - dropAge / 0.7;

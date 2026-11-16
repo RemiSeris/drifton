@@ -234,6 +234,11 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   à l'écran : lettre, note, fondamentale entourée, notes de l'accord en cours pointées.
   Les gestes ont déménagé pour libérer les lettres : filtre = V, montée = N (B et Espace
   inchangés).
+- **Instrument de la mélodie** : menu (ou touche M, « , » en AZERTY) avec *Auto* (le son suit
+  le style) et 12 instruments faits avec le même petit synthé : piano, piano électrique
+  (trémolo), orgue (deux tirettes, effet de cabine tournante), clavinet, synthé, cordes,
+  cuivres, flûte (avec souffle), mélodica, marimba, cloches, thérémine. Le nom s'affiche
+  sur la scène au changement ; le volume de la mélodie est gardé.
 - **Compositeur de mélodie** (`groove/composer.js`) et trois modes (boutons ou touche C) :
   *Free* (on joue), *Guide* (la mélodie est écrite mais muette : ses notes tombent sur la
   scène vers une ligne de jeu avec la lettre à taper, les touches du clavier à l'écran
@@ -272,6 +277,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-16** — Choix de l'instrument de la mélodie (12 sons + Auto). Bug corrigé au passage : le synthé du lead modifiait l'objet du patch de base, donc chaque son chargé laissait des traces dans les suivants (copie à la création).
 
 - **2026-11-16** — Cinq nouveaux styles : house, afrobeat, boom bap, trip-hop, reggaeton ; clap et cloche dans la batterie. Mélodie mesurée sur chacun : 0 % de notes tenues qui frottent, 100 % des temps forts sur l'accord.
 
