@@ -54,14 +54,42 @@ const LEAD_PATCH = {
   "fx.reverb": 0.3,
   volume: 0.45,
 };
+// Presets for the FM and plucked-string engines (synth/fm.js, synth/pluck.js).
+const SOUNDS = {
+  epiano: { engine: "fm", // tine electric piano: a body (ratio 1) and a metallic click (ratio 14)
+    "m1.ratio": 1, "m1.index": 1.4, "m1.decay": 1.0, "m1.sustain": 0.25,
+    "m2.ratio": 14, "m2.index": 0.9, "m2.decay": 0.06,
+    attack: 0.002, decay: 2.2, sustain: 0.15, release: 0.35,
+    tremolo: 0.25, tremRate: 4.2, velBright: 0.8, level: 0.24, "fx.reverb": 0.3 },
+  bells: { engine: "fm", // an odd ratio (3.5) makes the partials inharmonic: a bell
+    "m1.ratio": 3.5, "m1.index": 2.2, "m1.decay": 3, "m1.sustain": 0.2,
+    "m2.ratio": 1.41, "m2.index": 0.4, "m2.decay": 1,
+    attack: 0.001, decay: 3.5, sustain: 0, release: 2.5, level: 0.16, "fx.reverb": 0.5 },
+  marimba: { engine: "fm", // the 4th harmonic, struck and gone fast: a wooden bar
+    "m1.ratio": 4, "m1.index": 1.6, "m1.decay": 0.12, "m1.sustain": 0,
+    "m2.ratio": 10, "m2.index": 0.4, "m2.decay": 0.02,
+    attack: 0.001, decay: 0.5, sustain: 0, release: 0.25, level: 0.5, "fx.reverb": 0.25 },
+  brass: { engine: "fm", // the brightness swells in after the note starts: the "blat" of a horn
+    "m1.ratio": 1, "m1.index": 2.8, "m1.attack": 0.06, "m1.decay": 0.5, "m1.sustain": 0.6,
+    attack: 0.03, decay: 0.5, sustain: 0.8, release: 0.15,
+    velBright: 0.9, detune: 6, level: 0.33, "fx.reverb": 0.2 },
+  clavinet: { engine: "pluck", // a bright string hit near its end, damped as soon as you let go
+    decay: 0.9, brightness: 0.95, pick: 0.08, tone: 6500, release: 0.05, velBright: 0.5,
+    level: 1.2, "fx.reverb": 0.12 },
+  guitar: { engine: "pluck", // nylon: softer pluck, a bit further from the bridge
+    decay: 2.2, brightness: 0.45, pick: 0.18, tone: 4200, release: 0.12, level: 0.73, "fx.reverb": 0.25 },
+  harp: { engine: "pluck", // plucked in the middle: hollow; keeps ringing after release
+    decay: 3.5, brightness: 0.35, pick: 0.5, tone: 5000, release: 1.2, level: 0.44, "fx.reverb": 0.4 },
+  piano: { engine: "pluck", // two strings per note, slightly detuned, struck by a felt hammer
+    decay: 3.5, brightness: 0.4, pick: 0.12, strings: 2, detune: 1.2, tone: 5000, release: 0.25,
+    velBright: 0.8, level: 0.78, "fx.reverb": 0.25 },
+};
+
 // The lead changes sound with the style playing the beat, as a band would change
-// instrument: a clavinet-like pluck for funk, a melodica for dub, a soft flute for bossa.
+// instrument: a clavinet (a plucked string) for funk, an FM electric piano for boom bap,
+// FM brass for afrobeat, a marimba for reggaeton, a melodica for dub, a flute for bossa.
 const LEAD_SOUNDS = {
-  Funk: {
-    "a.wave": "square", "a.unison": 1, "a.level": 0.4, "b.wave": "sawtooth", "b.level": 0.15,
-    "filter.cutoff": 1300, "filter.res": 0.35, "filter.env": 2.4, "fenv.decay": 0.14, "fenv.sustain": 0.15,
-    "amp.attack": 0.003, "amp.decay": 0.2, "amp.sustain": 0.35, "amp.release": 0.08, "mod1.amount": 0,
-  },
+  Funk: SOUNDS.clavinet,
   Dub: {
     "a.wave": "sawtooth", "a.unison": 1, "a.level": 0.35, "b.wave": "square", "b.level": 0.3,
     "filter.cutoff": 1500, "filter.res": 0.15, "filter.env": 0.6, "fenv.decay": 0.4, "fenv.sustain": 0.6,
@@ -72,73 +100,47 @@ const LEAD_SOUNDS = {
     "filter.cutoff": 2600, "filter.res": 0.1, "filter.env": 0.3, "fenv.sustain": 0.6,
     "amp.attack": 0.035, "amp.decay": 0.3, "amp.sustain": 0.75, "amp.release": 0.3, "mod1.amount": 0.025,
   },
-  House: { // bright piano-ish pluck
-    "a.wave": "square", "a.unison": 1, "a.level": 0.35, "b.wave": "triangle", "b.level": 0.35,
-    "filter.cutoff": 2200, "filter.res": 0.2, "filter.env": 1.8, "fenv.decay": 0.25, "fenv.sustain": 0.2,
-    "amp.attack": 0.003, "amp.decay": 0.35, "amp.sustain": 0.3, "amp.release": 0.15, "mod1.amount": 0,
-  },
-  Afrobeat: { // a small horn section: two saws, a slower attack
-    "a.wave": "sawtooth", "a.unison": 2, "a.spread": 0.12, "a.level": 0.45, "b.wave": "square", "b.level": 0.15,
-    "filter.cutoff": 1700, "filter.res": 0.15, "filter.env": 1.5, "fenv.attack": 0.03, "fenv.decay": 0.2, "fenv.sustain": 0.5,
-    "amp.attack": 0.025, "amp.decay": 0.2, "amp.sustain": 0.8, "amp.release": 0.12, "mod1.amount": 0.01,
-  },
-  "Boom bap": { // a soft electric piano
-    "a.wave": "sine", "a.unison": 1, "a.level": 0.6, "b.wave": "triangle", "b.octave": 1, "b.level": 0.15,
-    "filter.cutoff": 2000, "filter.res": 0.1, "filter.env": 0.8, "fenv.decay": 0.5, "fenv.sustain": 0.3,
-    "amp.attack": 0.004, "amp.decay": 0.8, "amp.sustain": 0.35, "amp.release": 0.35, "mod1.amount": 0,
-  },
+  House: SOUNDS.piano,
+  Afrobeat: SOUNDS.brass,
+  "Boom bap": SOUNDS.epiano,
   "Trip-hop": { // a lonely, wobbly sine, like a theremin
     "a.wave": "sine", "a.unison": 1, "a.level": 0.7, "b.wave": "triangle", "b.level": 0.15,
     "filter.cutoff": 1800, "filter.res": 0.1, "filter.env": 0.2,
     "amp.attack": 0.08, "amp.decay": 0.4, "amp.sustain": 0.85, "amp.release": 0.5, "mod1.amount": 0.04,
   },
-  Reggaeton: { // a marimba-like pluck
-    "a.wave": "triangle", "a.unison": 1, "a.level": 0.6, "b.wave": "sine", "b.octave": 2, "b.level": 0.12,
-    "filter.cutoff": 3000, "filter.res": 0.1, "filter.env": 0.5, "fenv.decay": 0.15, "fenv.sustain": 0,
-    "amp.attack": 0.002, "amp.decay": 0.25, "amp.sustain": 0.05, "amp.release": 0.15, "mod1.amount": 0,
-  },
+  Reggaeton: SOUNDS.marimba,
 };
 // Instruments you can pick for the melody (or "Auto": the sound follows the style).
 // All made with the same little synth: two oscillators, a filter, envelopes, LFOs.
 const INSTRUMENTS = {
-  piano: { label: "Piano", sound: { // a hammer: bright attack that fades, no sustain
-    "a.wave": "triangle", "a.unison": 1, "a.level": 0.6, "b.wave": "square", "b.octave": 1, "b.level": 0.12,
-    "filter.cutoff": 1800, "filter.res": 0.1, "filter.env": 1.6, "fenv.attack": 0.001, "fenv.decay": 0.9, "fenv.sustain": 0,
-    "amp.attack": 0.002, "amp.decay": 1.4, "amp.sustain": 0.12, "amp.release": 0.35, "mod1.amount": 0,
-  } },
-  epiano: { label: "Electric piano", sound: { // soft bell tone, with tremolo
-    "a.wave": "sine", "a.unison": 1, "a.level": 0.65, "b.wave": "triangle", "b.octave": 1, "b.level": 0.2,
-    "filter.cutoff": 2200, "filter.res": 0.1, "filter.env": 0.8, "fenv.decay": 0.6, "fenv.sustain": 0.2,
-    "amp.attack": 0.003, "amp.decay": 1.2, "amp.sustain": 0.3, "amp.release": 0.4, "mod1.amount": 0,
-    "lfo2.shape": "sine", "lfo2.rate": 4.5, "mod2.src": "lfo2", "mod2.dst": "amp", "mod2.amount": 0.25,
-  } },
+  piano: { label: "Piano", sound: SOUNDS.piano },
+  epiano: { label: "Electric piano", sound: SOUNDS.epiano },
   organ: { label: "Organ", sound: { // two "drawbars" (fundamental + octave), no decay, a rotating-speaker wobble
     "a.wave": "sine", "a.unison": 1, "a.level": 0.42, "b.wave": "sine", "b.octave": 1, "b.level": 0.33,
     "filter.cutoff": 4000, "filter.res": 0, "filter.env": 0,
     "amp.attack": 0.006, "amp.decay": 0.1, "amp.sustain": 1, "amp.release": 0.06, "mod1.amount": 0.008,
     "lfo2.shape": "sine", "lfo2.rate": 6.5, "mod2.src": "lfo2", "mod2.dst": "amp", "mod2.amount": 0.15,
   } },
-  clavinet: { label: "Clavinet", sound: LEAD_SOUNDS.Funk },
+  clavinet: { label: "Clavinet", sound: SOUNDS.clavinet },
+  guitar: { label: "Guitar", sound: SOUNDS.guitar },
+  harp: { label: "Harp", sound: SOUNDS.harp },
   synth: { label: "Synth lead", sound: {} }, // the base patch: detuned saws and vibrato
   strings: { label: "Strings", sound: { // many detuned saws, slow bow
     "a.wave": "sawtooth", "a.unison": 3, "a.spread": 0.25, "a.width": 0.8, "a.level": 0.4, "b.level": 0,
     "filter.cutoff": 2400, "filter.res": 0.1, "filter.env": 0.3,
     "amp.attack": 0.25, "amp.decay": 0.5, "amp.sustain": 0.85, "amp.release": 0.7, "mod1.amount": 0.02,
   } },
-  brass: { label: "Brass", sound: LEAD_SOUNDS.Afrobeat },
+  brass: { label: "Brass", sound: SOUNDS.brass },
   flute: { label: "Flute", sound: { ...LEAD_SOUNDS["Bossa nova"], "noise.level": 0.08 } }, // + breath
   melodica: { label: "Melodica", sound: LEAD_SOUNDS.Dub },
-  marimba: { label: "Marimba", sound: LEAD_SOUNDS.Reggaeton },
-  bells: { label: "Bells", sound: { // pure tones with a high partial, long ring
-    "a.wave": "sine", "a.unison": 1, "a.level": 0.6, "b.wave": "sine", "b.octave": 2, "b.level": 0.35,
-    "filter.cutoff": 6000, "filter.res": 0, "filter.env": 0,
-    "amp.attack": 0.002, "amp.decay": 1.8, "amp.sustain": 0, "amp.release": 1.2, "mod1.amount": 0, "fx.reverb": 0.5,
-  } },
+  marimba: { label: "Marimba", sound: SOUNDS.marimba },
+  bells: { label: "Bells", sound: SOUNDS.bells },
   theremin: { label: "Theremin", sound: LEAD_SOUNDS["Trip-hop"] },
 };
 
-// A copy: the synth edits its params in place, the base patch must stay clean.
-const lead = new Synth(ctx, { ...LEAD_PATCH }, master.input, master.send);
+// The melody's instrument: any engine (subtractive, FM, plucked string), see instrument.js.
+const lead = new Instrument(ctx, master.input, master.send);
+lead.volume.gain.value = LEAD_PATCH.volume;
 let instrument = "auto"; // or a key of INSTRUMENTS
 let leadSound = "";
 let leadToast = null;    // { text, t } shown on the stage when the sound changes
@@ -147,8 +149,8 @@ function applyLeadSound(styleName) {
   if (key === leadSound) return;
   leadSound = key;
   const sound = instrument === "auto" ? LEAD_SOUNDS[styleName] || {} : INSTRUMENTS[instrument].sound;
-  const volume = lead.params.volume; // keep the user's melody volume
-  lead.loadPatch({ ...LEAD_PATCH, ...sound, volume });
+  // FM and string presets stand alone; subtractive ones are tweaks of the base patch.
+  lead.loadPatch(sound.engine ? { ...sound } : { ...LEAD_PATCH, ...sound });
   if (groove.running || instrument !== "auto") {
     leadToast = { text: instrument === "auto" ? `${styleName} sound` : INSTRUMENTS[instrument].label, t: ctx.currentTime };
   }
@@ -160,7 +162,7 @@ const singer = new Singer(ctx, lead, harmony, groove, melody);
 
 // Each loop layer gets its own synth, with the melody's sound at the moment of recording.
 const looper = new Looper(ctx, groove, harmony, melody, () => ({
-  synth: new Synth(ctx, { ...lead.params }, master.input, master.send),
+  synth: lead.clone(master.input, master.send),
   label: instrument === "auto" ? `${groove.core.name} sound` : INSTRUMENTS[instrument].label,
 }));
 singer.onNote = (midi, t, on) => looper.capture(midi, t, on, "voice");

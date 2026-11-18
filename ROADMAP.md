@@ -257,6 +257,16 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   léger bonus à la tonique, léger malus à la répétition). Le mode reste celui du thème. En
   Guide, le compositeur te fait rejouer le thème. Scène : voyant REC, anneau par couche,
   comètes aux couleurs des couches. Testé : D F A F | G B D B → Dm7 / G7.
+- **Trois moteurs de son** pour la mélodie et les boucles (`synth/instrument.js` choisit
+  le moteur selon le preset) : soustractif (`synth.js`), **FM** (`synth/fm.js` : porteuse +
+  2 modulateurs, indice avec sa propre enveloppe, la frappe change la brillance, trémolo,
+  2e porteuse désaccordée) pour piano électrique, cloches, marimba, cuivres ; **corde
+  pincée** Karplus-Strong (`synth/pluck.js` : calculée note par note en JS et mise en
+  cache, car une boucle de retard Web Audio ne descend pas sous 128 échantillons ;
+  accord fin par passe-tout du 1er ordre — juste à 2 cents près jusqu'au do 84 ; position
+  du pincement, brillance selon la frappe, plusieurs cordes désaccordées) pour clavinet,
+  guitare, harpe, piano. Niveaux réglés sur la même phrase (−30 à −27 dB). Les sons
+  « Auto » de funk, house, afrobeat, boom bap et reggaeton passent sur ces moteurs.
 - **Instrument de la mélodie** : menu (ou touche M, « , » en AZERTY) avec *Auto* (le son suit
   le style) et 12 instruments faits avec le même petit synthé : piano, piano électrique
   (trémolo), orgue (deux tirettes, effet de cabine tournante), clavinet, synthé, cordes,
@@ -300,6 +310,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-18** — Étape 1 de l'amélioration du compositeur : nouveaux moteurs de son FM et corde pincée (Karplus-Strong), piano, piano électrique, clavinet, cuivres, marimba, cloches refaits, guitare et harpe ajoutées. Suite prévue : 2. le jeu (vélocité, legato, vibrato retardé, phrasé par style), 3. compositeur v3 (développement de motifs, notes d'approche, vocabulaire par style, nuances, forme sur 16 mesures).
 
 - **2026-11-18** — Record « n'entendait rien » chez l'utilisateur : il n'allumait pas le micro (il fallait appuyer sur Sing avant), et une note commencée avant le « un » et tenue était perdue. Record allume le micro, les notes tenues au départ comptent depuis le « un », le nombre de notes captées s'affiche pendant la prise. Testé de bout en bout avec un WAV de fredonnement comme faux micro.
 
