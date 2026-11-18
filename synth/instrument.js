@@ -2,7 +2,8 @@
 //
 //   engine "sub"   = Synth (synth.js): oscillators → filter → envelopes (subtractive)
 //   engine "fm"    = FMSynth (fm.js): electric pianos, bells, marimba, brass
-//   engine "pluck" = PluckSynth (pluck.js): clavinet, guitar, harp, piano
+//   engine "pluck" = PluckSynth (pluck.js): clavinet, guitar, harp
+//   engine "piano" = PianoSynth (piano.js): a struck string, partial by partial
 //
 //   active engine ──> volume (yours, e.g. the melody volume slider) ──> MasterBus
 //
@@ -20,6 +21,7 @@ class Instrument {
       sub: new Synth(ctx, { ...defaultParams(), volume: 1 }, this.volume, send),
       fm: new FMSynth(ctx, this.volume, send),
       pluck: new PluckSynth(ctx, this.volume, send),
+      piano: new PianoSynth(ctx, this.volume, send),
     };
     this.engine = this.engines.sub;
     this.patch = {};

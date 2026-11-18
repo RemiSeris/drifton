@@ -92,22 +92,27 @@ class PluckSynth {
     const key = note + "|" + vb;
     let buf = this.cache.get(key);
     if (buf) return buf;
-    const P = this.params;
     const sr = this.ctx.sampleRate;
-    const f = midiToFreq(note);
-    const T = Math.min(6, Math.max(0.2, P.decay * Math.pow(440 / f, 0.4)));
-    const n = Math.floor(sr * Math.min(6, T * 1.1 + 0.05));
-    const out = new Float32Array(n);
-    const bright = Math.min(1, P.brightness * (1 - P.velBright + P.velBright * vb));
-    for (let s = 0; s < P.strings; s++) {
-      const cents = P.strings > 1 ? (s / (P.strings - 1) - 0.5) * 2 * P.detune : 0;
-      karplusStrong(out, sr, f * Math.pow(2, cents / 1200), T, bright, P.pick, 1 / P.strings);
-    }
-    buf = this.ctx.createBuffer(1, n, sr);
+    const out = this.render(sr, note, vb);
+    buf = this.ctx.createBuffer(1, out.length, sr);
     buf.getChannelData(0).set(out);
     if (this.cache.size > 160) this.cache.delete(this.cache.keys().next().value);
     this.cache.set(key, buf);
     return buf;
+  }
+
+  // The samples of one note (a subclass can model another instrument, see piano.js).
+  render(sr, note, velocity) {
+    const P = this.params;
+    const f = midiToFreq(note);
+    const T = Math.min(6, Math.max(0.2, P.decay * Math.pow(440 / f, 0.4)));
+    const out = new Float32Array(Math.floor(sr * Math.min(6, T * 1.1 + 0.05)));
+    const bright = Math.min(1, P.brightness * (1 - P.velBright + P.velBright * velocity));
+    for (let s = 0; s < P.strings; s++) {
+      const cents = P.strings > 1 ? (s / (P.strings - 1) - 0.5) * 2 * P.detune : 0;
+      karplusStrong(out, sr, f * Math.pow(2, cents / 1200), T, bright, P.pick, 1 / P.strings);
+    }
+    return out;
   }
 }
 

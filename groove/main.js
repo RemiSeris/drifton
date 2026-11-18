@@ -80,9 +80,9 @@ const SOUNDS = {
     decay: 2.2, brightness: 0.45, pick: 0.18, tone: 4200, release: 0.12, level: 0.73, "fx.reverb": 0.25 },
   harp: { engine: "pluck", // plucked in the middle: hollow; keeps ringing after release
     decay: 3.5, brightness: 0.35, pick: 0.5, tone: 5000, release: 1.2, level: 0.44, "fx.reverb": 0.4 },
-  piano: { engine: "pluck", // two strings per note, slightly detuned, struck by a felt hammer
-    decay: 3.5, brightness: 0.4, pick: 0.12, strings: 2, detune: 1.2, tone: 5000, release: 0.25,
-    velBright: 0.8, level: 0.78, "fx.reverb": 0.25 },
+  piano: { engine: "piano", // a struck string, partial by partial (synth/piano.js)
+    decay: 10, hardness: 0.6, detune: 0.9, thump: 0.5, tone: 7000, release: 0.25,
+    level: 0.6, "fx.reverb": 0.25 },
 };
 
 // The lead changes sound with the style playing the beat, as a band would change
