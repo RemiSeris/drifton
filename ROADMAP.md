@@ -257,6 +257,18 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   léger bonus à la tonique, léger malus à la répétition). Le mode reste celui du thème. En
   Guide, le compositeur te fait rejouer le thème. Scène : voyant REC, anneau par couche,
   comètes aux couleurs des couches. Testé : D F A F | G B D B → Dm7 / G7.
+- **Compositeur v3** (`groove/composer.js`) : une **forme sur 16 mesures**, A (motif,
+  motif, réponse, cadence), A' (motif développé : transposé en marche, décalé d'une croche,
+  renversé ou orné selon le style), B (contraste : autre motif, environ une quinte plus
+  haut, plus fort, fin ouverte sur la tierce ou la quinte), A'' (retour, cadence finale sur
+  la fondamentale). Un motif est gardé comme rythme + dessin (intervalles) et reposé sur
+  l'accord du moment. Vocabulaire par style : notes d'approche voisines avant les temps
+  forts (bossa, boom bap, trip-hop ; fixées par motif pour revenir à l'identique), doublure
+  à l'octave inférieure (afrobeat), tierce sous les notes fortes (house), crochet répété tel
+  quel (reggaeton). Nuances : niveau par section, montée dans la phrase, accents. Mesuré
+  contre la v2 sur 16 mesures : dessins repris 31–56 % des mesures (v2 25–44 %), section B
+  +1 à +5 demi-tons (v2 au hasard), B plus forte de +0,2 (v2 0), toujours 0 % de frottement
+  et 100 % des temps forts sur l'accord. En Guide : pas de doublure ni d'ornement.
 - **Le jeu (expression)** : dans le synthé soustractif (`voice.js`, réglages optionnels,
   0 = éteint) : `vel.cutoff` (la force ouvre le filtre), `vib.delay` (le vibrato arrive
   après l'attaque : 5 centièmes d'écart au début, 20 ensuite), `glide` (en legato, la
@@ -321,6 +333,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-18** — Phase 3, compositeur v3 : forme A A' B A'' sur 16 mesures, développement de motif, vocabulaire par style, nuances.
 
 - **2026-11-18** — Piano refait en corde frappée (additif). Phase 2, le jeu : vibrato retardé, glissé en legato, brillance selon la force, phrasé par style dans le compositeur.
 
