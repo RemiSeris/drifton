@@ -164,6 +164,7 @@ const looper = new Looper(ctx, groove, harmony, melody, () => ({
   label: instrument === "auto" ? `${groove.core.name} sound` : INSTRUMENTS[instrument].label,
 }));
 singer.onNote = (midi, t, on) => looper.capture(midi, t, on, "voice");
+looper.heldNow = () => [...new Set([...melody.down.values(), ...(singer.note !== null ? [singer.note] : [])])];
 groove.onStep = (i, abs, t, sixteenth) => {
   composer.onStep(i, abs, t, sixteenth);
   looper.onStep(i, abs, t, sixteenth);
@@ -539,22 +540,24 @@ $("lead-volume").addEventListener("input", (e) => lead.set("volume", e.target.va
 
 // ---- Sing (microphone) ----
 
-$("sing").addEventListener("click", async () => {
-  const b = $("sing");
-  b.blur();
-  if (singer.on) {
-    singer.stop();
-  } else {
-    await ctx.resume();
-    try {
-      await singer.start();
-    } catch (err) {
-      $("sung").textContent = "Microphone refused or not found";
-      return;
-    }
+async function startSinging() {
+  await ctx.resume();
+  try {
+    await singer.start();
+  } catch (err) {
+    micError = "Microphone refused or not found";
   }
-  b.classList.toggle("active", singer.on);
-  b.textContent = singer.on ? "● Listening" : "🎤 Sing";
+  showSingButton();
+}
+let micError = "";
+function showSingButton() {
+  $("sing").classList.toggle("active", singer.on);
+  $("sing").textContent = singer.on ? "● Listening" : "🎤 Sing";
+}
+$("sing").addEventListener("click", async () => {
+  $("sing").blur();
+  if (singer.on) singer.stop(); else await startSinging();
+  showSingButton();
 });
 $("voice-octave").addEventListener("change", (e) => {
   singer.octave = e.target.value === "auto" ? "auto" : Number(e.target.value);
@@ -562,7 +565,7 @@ $("voice-octave").addEventListener("change", (e) => {
 });
 function updateSing() {
   $("sing-level").style.width = singer.on ? `${Math.min(100, singer.level * 600)}%` : "0";
-  $("sung").textContent = !singer.on ? ""
+  $("sung").textContent = !singer.on ? micError
     : singer.note !== null ? `${NOTE_NAMES[singer.note % 12]}${Math.floor(singer.note / 12) - 1}`
     : singer.level > singer.gate ? "…" : "sing or hum";
 }
@@ -576,6 +579,9 @@ $("rec").addEventListener("click", async () => {
   await ctx.resume();
   if (looper.armed || looper.rec) { looper.cancel(); return; }
   if (!groove.running) await togglePlay();
+  // Recording listens to the microphone too: switch it on if it isn't (you can also
+  // play the letter keys).
+  if (!singer.on) await startSinging();
   looper.arm(Number($("loop-bars").value));
 });
 $("build").addEventListener("change", (e) => {
@@ -587,7 +593,9 @@ $("clear-loops").addEventListener("click", (e) => { looper.clear(); e.target.blu
 
 let loopMessage = "";
 looper.onChange = (what) => {
-  loopMessage = what === "empty" ? "Nothing heard: try again, a bit louder or with the keys." : "";
+  loopMessage = what === "empty"
+    ? (singer.on ? "Nothing heard: sing a bit louder, or play the letter keys." : "Nothing heard: allow the microphone, or play the letter keys.")
+    : "";
   renderLayers();
 };
 function renderLayers() {
@@ -625,7 +633,8 @@ function updateLoop() {
   const r = looper.rec;
   $("rec").classList.toggle("active", !!(looper.armed || r));
   $("rec").textContent = looper.armed ? "● Waiting for the one" : r ? "● Recording" : "⏺ Record";
-  $("rec-status").textContent = r ? `${Math.min(r.bars, Math.floor(loopFrac(r.startBar, r.bars) * r.bars) + 1)} / ${r.bars}`
+  const caught = r ? r.notes.length + r.open.size : 0;
+  $("rec-status").textContent = r ? `bar ${Math.min(r.bars, Math.floor(loopFrac(r.startBar, r.bars) * r.bars) + 1)} / ${r.bars} · ${caught} note${caught === 1 ? "" : "s"}`
     : looper.layers.length >= MAX_LAYERS ? "4 layers: delete one to record again" : loopMessage;
   $("rec").disabled = looper.layers.length >= MAX_LAYERS && !r && !looper.armed;
 }

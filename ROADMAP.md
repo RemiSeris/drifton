@@ -301,6 +301,8 @@ GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifto
 
 ## Journal
 
+- **2026-11-18** — Record « n'entendait rien » chez l'utilisateur : il n'allumait pas le micro (il fallait appuyer sur Sing avant), et une note commencée avant le « un » et tenue était perdue. Record allume le micro, les notes tenues au départ comptent depuis le « un », le nombre de notes captées s'affiche pendant la prise. Testé de bout en bout avec un WAV de fredonnement comme faux micro.
+
 - **2026-11-18** — Boucle fredonnée : enregistrement (clavier ou voix) recalé sur la grille, couches en boucle avec leur instrument, et la musique qui se construit autour du thème (accords choisis pour lui, Guide qui le fait rejouer).
 
 - **2026-11-18** — Chant au micro : on fredonne, l'instrument joue la note recalée sur la gamme. Prise des notes sur l'horloge du groove, en vue de la boucle fredonnée.

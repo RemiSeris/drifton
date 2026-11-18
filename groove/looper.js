@@ -32,6 +32,7 @@ class Looper {
     this.rec = null;   // { startAbs, startBar, bars, notes, open }
     this.build = true; // the chords follow the theme
     this.onChange = null; // callback for the page (layers list)
+    this.heldNow = null;  // optional () → MIDI notes you are holding right now (keys, voice)
   }
 
   get theme() { return this.layers[0] || null; }
@@ -81,6 +82,9 @@ class Looper {
       if (this.armed) {
         this.rec = { startAbs: abs, startBar: bar, bars: this.armed.bars, notes: [], open: new Map() };
         this.armed = null;
+        // A note you started a little before the "one" and are still holding counts,
+        // from the "one" (otherwise a long hum begun early would be lost entirely).
+        if (this.heldNow) for (const midi of this.heldNow()) this.rec.open.set(midi, { midi, start: abs, vel: 0.8 });
       }
     }
     for (const layer of this.layers) {
