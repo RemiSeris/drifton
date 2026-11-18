@@ -257,6 +257,17 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   léger bonus à la tonique, léger malus à la répétition). Le mode reste celui du thème. En
   Guide, le compositeur te fait rejouer le thème. Scène : voyant REC, anneau par couche,
   comètes aux couleurs des couches. Testé : D F A F | G B D B → Dm7 / G7.
+- **Le jeu (expression)** : dans le synthé soustractif (`voice.js`, réglages optionnels,
+  0 = éteint) : `vel.cutoff` (la force ouvre le filtre), `vib.delay` (le vibrato arrive
+  après l'attaque : 5 centièmes d'écart au début, 20 ensuite), `glide` (en legato, la
+  hauteur glisse depuis la note précédente). Le compositeur joue chaque style avec son
+  phrasé (`play` dans `PHRASES` : longueur jouée, retard sur le temps, imprécision) :
+  funk piqué (0,5), bossa et trip-hop liés (1,08, glissés), boom bap 18 ms derrière le
+  temps ; force et placement légèrement humains.
+- **Piano** (`synth/piano.js`) : corde frappée en synthèse additive (harmoniques étirées par
+  la raideur, dureté du marteau, deux cordes désaccordées : chute rapide puis longue
+  résonance, aigus qui s'éteignent d'abord, coup de marteau) ; remplace le piano en corde
+  pincée, qui « sonnait pincé ».
 - **Trois moteurs de son** pour la mélodie et les boucles (`synth/instrument.js` choisit
   le moteur selon le preset) : soustractif (`synth.js`), **FM** (`synth/fm.js` : porteuse +
   2 modulateurs, indice avec sa propre enveloppe, la frappe change la brillance, trémolo,
@@ -310,6 +321,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-18** — Piano refait en corde frappée (additif). Phase 2, le jeu : vibrato retardé, glissé en legato, brillance selon la force, phrasé par style dans le compositeur.
 
 - **2026-11-18** — Étape 1 de l'amélioration du compositeur : nouveaux moteurs de son FM et corde pincée (Karplus-Strong), piano, piano électrique, clavinet, cuivres, marimba, cloches refaits, guitare et harpe ajoutées. Suite prévue : 2. le jeu (vélocité, legato, vibrato retardé, phrasé par style), 3. compositeur v3 (développement de motifs, notes d'approche, vocabulaire par style, nuances, forme sur 16 mesures).
 

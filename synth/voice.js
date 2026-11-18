@@ -9,15 +9,23 @@
 //
 // A new Voice is built on every note-on and thrown away once its release has finished.
 // Web Audio nodes are cheap to create, and an oscillator can only be started once anyway.
+//
+// Playing expression (all optional, 0 = off):
+// - vel.cutoff: velocity opens the filter (hit harder = brighter), like real instruments
+// - vib.delay:  pitch modulation (vibrato) fades in over this time after the note starts,
+//               as singers and string players do, instead of wobbling from the attack
+// - glide:      `fromNote` given (a legato note): the pitch slides from it (portamento)
 
 class Voice {
-  constructor(synth, note, velocity, t) {
+  constructor(synth, note, velocity, t, fromNote) {
     const ctx = synth.ctx;
     const p = synth.params;
     this.ctx = ctx;
     this.synth = synth;
     this.note = note;
     this.released = false;
+    // Velocity → brightness: from about -1 octave (soft) to +0.6 octave (hard) at 100%.
+    this.velFactor = Math.pow(2, (velocity - 0.7) * 2 * (p["vel.cutoff"] || 0));
 
     this.filter = ctx.createBiquadFilter();
     this.amp = ctx.createGain();
@@ -48,6 +56,24 @@ class Voice {
     this.update(p, false);
     this.connectMods();
 
+    // Legato: slide from the previous note's pitch.
+    if (fromNote !== undefined && p.glide > 0) {
+      for (const layer of this.layers) for (const osc of layer.oscs) {
+        osc.frequency.setValueAtTime(midiToFreq(fromNote), t);
+        osc.frequency.exponentialRampToValueAtTime(freq, t + p.glide);
+      }
+    }
+    // Delayed vibrato: the pitch modulation fades in after the attack.
+    if (p["vib.delay"] > 0) {
+      for (const m of this.mods) {
+        if (m.dst !== "pitch") continue;
+        const target = p[`mod${m.slot}.amount`] * m.scale;
+        m.gain.gain.setValueAtTime(0, t);
+        m.gain.gain.setValueAtTime(0, t + p["vib.delay"] * 0.4);
+        m.gain.gain.linearRampToValueAtTime(target, t + p["vib.delay"]);
+      }
+    }
+
     // Amp envelope: volume from 0 to `velocity`.
     Envelope.start(this.amp.gain, t, envFrom(p, "amp"), velocity);
     // Filter envelope: it moves the filter's `detune` (in cents) rather than its
@@ -61,7 +87,7 @@ class Voice {
   update(p, smooth) {
     const f = this.filter;
     if (f.type !== p["filter.type"]) f.type = p["filter.type"];
-    setParam(this.ctx, f.frequency, p["filter.cutoff"], smooth);
+    setParam(this.ctx, f.frequency, p["filter.cutoff"] * (this.velFactor || 1), smooth);
     setParam(this.ctx, f.Q, resonanceToQ(p["filter.res"], f.type), smooth);
     for (const layer of this.layers) layer.update(p, smooth);
     setParam(this.ctx, this.noiseGain.gain, p["noise.level"], smooth);
@@ -106,7 +132,7 @@ class Voice {
         gain.gain.value = p[`mod${slot}.amount`] * scale;
         lfo.out.connect(gain);
         gain.connect(param); // an AudioParam adds every signal connected to it to its own value
-        this.mods.push({ slot, lfo, gain, scale });
+        this.mods.push({ slot, lfo, gain, scale, dst: p[`mod${slot}.dst`] });
       }
     }
   }

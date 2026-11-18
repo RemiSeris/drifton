@@ -52,6 +52,8 @@ const LEAD_PATCH = {
   "mod1.src": "lfo1", "mod1.dst": "pitch", "mod1.amount": 0.06,
   "mod2.src": "off", "mod3.src": "off",
   "fx.reverb": 0.3,
+  // Expression (synth/voice.js): vibrato after the attack, legato slides, velocity = brightness.
+  "vib.delay": 0.35, glide: 0.06, "vel.cutoff": 0.9,
   volume: 0.45,
 };
 // Presets for the FM and plucked-string engines (synth/fm.js, synth/pluck.js).
@@ -94,11 +96,13 @@ const LEAD_SOUNDS = {
     "a.wave": "sawtooth", "a.unison": 1, "a.level": 0.35, "b.wave": "square", "b.level": 0.3,
     "filter.cutoff": 1500, "filter.res": 0.15, "filter.env": 0.6, "fenv.decay": 0.4, "fenv.sustain": 0.6,
     "amp.attack": 0.02, "amp.decay": 0.3, "amp.sustain": 0.8, "amp.release": 0.2, "mod1.amount": 0.015,
+    "vib.delay": 0.45, glide: 0.03,
   },
   "Bossa nova": {
     "a.wave": "triangle", "a.unison": 1, "a.level": 0.6, "b.wave": "sine", "b.level": 0.25,
     "filter.cutoff": 2600, "filter.res": 0.1, "filter.env": 0.3, "fenv.sustain": 0.6,
     "amp.attack": 0.035, "amp.decay": 0.3, "amp.sustain": 0.75, "amp.release": 0.3, "mod1.amount": 0.025,
+    "vib.delay": 0.3, glide: 0.04,
   },
   House: SOUNDS.piano,
   Afrobeat: SOUNDS.brass,
@@ -107,6 +111,7 @@ const LEAD_SOUNDS = {
     "a.wave": "sine", "a.unison": 1, "a.level": 0.7, "b.wave": "triangle", "b.level": 0.15,
     "filter.cutoff": 1800, "filter.res": 0.1, "filter.env": 0.2,
     "amp.attack": 0.08, "amp.decay": 0.4, "amp.sustain": 0.85, "amp.release": 0.5, "mod1.amount": 0.04,
+    "vib.delay": 0.15, glide: 0.12, // the theremin slides between every note
   },
   Reggaeton: SOUNDS.marimba,
 };
@@ -120,6 +125,7 @@ const INSTRUMENTS = {
     "filter.cutoff": 4000, "filter.res": 0, "filter.env": 0,
     "amp.attack": 0.006, "amp.decay": 0.1, "amp.sustain": 1, "amp.release": 0.06, "mod1.amount": 0.008,
     "lfo2.shape": "sine", "lfo2.rate": 6.5, "mod2.src": "lfo2", "mod2.dst": "amp", "mod2.amount": 0.15,
+    glide: 0, "vib.delay": 0,
   } },
   clavinet: { label: "Clavinet", sound: SOUNDS.clavinet },
   guitar: { label: "Guitar", sound: SOUNDS.guitar },
@@ -129,6 +135,7 @@ const INSTRUMENTS = {
     "a.wave": "sawtooth", "a.unison": 3, "a.spread": 0.25, "a.width": 0.8, "a.level": 0.4, "b.level": 0,
     "filter.cutoff": 2400, "filter.res": 0.1, "filter.env": 0.3,
     "amp.attack": 0.25, "amp.decay": 0.5, "amp.sustain": 0.85, "amp.release": 0.7, "mod1.amount": 0.02,
+    glide: 0, "vib.delay": 0.5,
   } },
   brass: { label: "Brass", sound: SOUNDS.brass },
   flute: { label: "Flute", sound: { ...LEAD_SOUNDS["Bossa nova"], "noise.level": 0.08 } }, // + breath

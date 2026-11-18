@@ -42,17 +42,24 @@ class Synth {
   }
 
   noteOn(note, velocity = 0.8, t = this.ctx.currentTime) {
+    // Legato (the previous note still held, or released less than 60 ms ago, or
+    // released later than this note starts): with glide on, slide from it.
+    let from;
+    if (this.params.glide > 0 && this.lastNote !== undefined && this.lastNote !== note
+        && (this.held.size > 0 || t - this.lastOff < 0.06)) from = this.lastNote;
     this.noteOff(note, t);
     if (this.voices.size >= this.maxVoices) this.steal(t);
-    const voice = new Voice(this, note, velocity, t);
+    const voice = new Voice(this, note, velocity, t, from);
     this.voices.add(voice);
     this.held.set(note, voice);
+    this.lastNote = note;
   }
 
   noteOff(note, t = this.ctx.currentTime) {
     const voice = this.held.get(note);
     if (!voice) return;
     this.held.delete(note);
+    this.lastOff = t;
     voice.release(t);
   }
 

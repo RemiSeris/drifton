@@ -21,38 +21,52 @@
 // Each note: { abs, len, step, code, t, end, judged } — abs = step index on the groove
 // clock, len in sixteenths, t / end = audio times (estimated, then exact when it comes).
 
+// play: how the composer plays the notes it writes (Auto mode), per style.
+//   gate   = how much of the written length sounds (0.5 = short and punchy, >1 = notes
+//            overlap: legato, and the sounds with glide slide from one to the next)
+//   late   = seconds behind the beat (a laid-back feel)
+//   jitter = random timing, in seconds, a human never plays exactly on the grid
+const PLAY_DEFAULT = { gate: 0.9, late: 0, jitter: 0.008 };
 const PHRASES = {
   Funk: {
+    play: { gate: 0.5, late: 0, jitter: 0.006 }, // staccato
     motifs: ["x.x...x...x.x...", "..x.x...x.x...x.", "x..x..x...x-x...", "...x.x..x...x.x."],
     cadences: ["x.x...x---------", "..x.x...x-------"],
   },
   Dub: {
+    play: { gate: 1.0, late: 0.01, jitter: 0.01 },
     motifs: ["....x---....x---", "..x-----......x-", "x-------..x-x---", "....x-x-....x---"],
     cadences: ["....x-----------", "x-------........"],
   },
   "Bossa nova": {
+    play: { gate: 1.08, late: 0, jitter: 0.01 }, // legato
     motifs: ["x-.x--x-........", "..x--x--x---....", "x---..x-x--x....", "....x-x--x--x---"],
     cadences: ["x--x--x---------", "..x--x--x-------"],
     sevenths: true, // bossa melodies love the 7th of the chord
   },
   House: { // short piano-like riffs that answer the off-beat bass
+    play: { gate: 0.7, late: 0, jitter: 0.005 },
     motifs: ["x.x...x...x.x...", "..x-..x-..x-..x-", "x--.x--.x---....", "....x-x-....x-x-"],
     cadences: ["x-x-x-----------", "..x-..x---------"],
   },
   Afrobeat: { // horn lines: punchy, repeated, call and response
+    play: { gate: 0.8, late: 0, jitter: 0.008 },
     motifs: ["x.x.x...x.x.....", "..x.x.x-....x.x.", "x-..x-..x.x.x...", "....x.x.x-x-...."],
     cadences: ["x.x.x-----------", "....x.x.x-------"],
   },
   "Boom bap": { // laid back, few notes, behind the beat (the swing does that)
+    play: { gate: 0.95, late: 0.018, jitter: 0.012 }, // a hair behind the beat
     motifs: ["x---....x-x-....", "....x-x---......", "..x---....x---..", "x-x---......x---"],
     cadences: ["x---------------", "....x-----------"],
     sevenths: true,
   },
   "Trip-hop": { // slow, long, lonely notes with lots of space
+    play: { gate: 1.08, late: 0.012, jitter: 0.012 },
     motifs: ["x-------........", "........x-----x-", "....x---x-------", "x---....x---...."],
     cadences: ["x---------------", "........x-------"],
   },
   Reggaeton: { // follows the dembow's syncopation
+    play: { gate: 0.55, late: 0, jitter: 0.005 },
     motifs: ["...x..x....x..x.", "x..x..x.x.......", "...x..x-x-......", "x-.x-.x-........"],
     cadences: ["...x..x---------", "x..x..x---------"],
   },
@@ -123,8 +137,13 @@ class Composer {
       n.t = t;                                   // now we know the exact time
       n.end = t + n.len * sixteenth * 0.92;
       if (this.mode === "auto") {
-        this.melody.press(n.code, n.vel, n.t);
-        this.melody.release(n.code, n.end);
+        // Played with the style's phrasing: length, a little behind or not, never
+        // exactly on the grid, never twice exactly as loud.
+        const pl = (PHRASES[this.groove.core.name] || {}).play || PLAY_DEFAULT;
+        const tp = Math.max(t, t + pl.late + (Math.random() - 0.5) * pl.jitter);
+        const vel = Math.max(0.2, Math.min(1, n.vel + (Math.random() - 0.5) * 0.12));
+        this.melody.press(n.code, vel, tp);
+        this.melody.release(n.code, tp + n.len * sixteenth * pl.gate);
       }
     }
     // Keep only what is recent or to come.
