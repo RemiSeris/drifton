@@ -234,6 +234,17 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   à l'écran : lettre, note, fondamentale entourée, notes de l'accord en cours pointées.
   Les gestes ont déménagé pour libérer les lettres : filtre = V, montée = N (B et Espace
   inchangés).
+- **Chant** (`groove/sing.js`) : bouton Sing, le micro écoute (non renvoyé aux enceintes ;
+  casque conseillé), détection de hauteur YIN sur un échantillon sur deux toutes les 15 ms
+  (< 5 centièmes d'erreur sur sinus, dents de scie et voyelles synthétiques ; rien sur
+  silence ni bruit), note recalée sur la gamme et montée dans le registre de la mélodie
+  (octave auto gardée tant qu'elle va, ou choisie), jouée par l'instrument de la mélodie.
+  Anti-tremblement : hauteur moyennée sur un cycle de vibrato (0,15 s) mais remise à zéro
+  à chaque vrai saut (> 0,8 demi-ton), changement de note seulement si la nouvelle est
+  nettement plus proche ; réaction ~60 ms. Sur la scène : traînée de la voix brute,
+  anneau, comète de la note jouée. Chaque note chantée est notée sur l'horloge du groove
+  (`singer.take`, en doubles croches) pour la suite : construire autour d'une boucle
+  fredonnée.
 - **Instrument de la mélodie** : menu (ou touche M, « , » en AZERTY) avec *Auto* (le son suit
   le style) et 12 instruments faits avec le même petit synthé : piano, piano électrique
   (trémolo), orgue (deux tirettes, effet de cabine tournante), clavinet, synthé, cordes,
@@ -277,6 +288,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-18** — Chant au micro : on fredonne, l'instrument joue la note recalée sur la gamme. Prise des notes sur l'horloge du groove, en vue de la boucle fredonnée.
 
 - **2026-11-16** — Choix de l'instrument de la mélodie (12 sons + Auto). Bug corrigé au passage : le synthé du lead modifiait l'objet du patch de base, donc chaque son chargé laissait des traces dans les suivants (copie à la création).
 

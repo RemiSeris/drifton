@@ -67,6 +67,18 @@
       </div>
       <span class="score" id="score"></span>
     </div>
+    <div class="sing-row">
+      <button id="sing" class="sing">🎤 Sing</button>
+      <div class="meter"><div id="sing-level"></div></div>
+      <span class="sung" id="sung"></span>
+      <label class="row"><span>Voice</span><select id="voice-octave">
+        <option value="auto">Auto octave</option>
+        <option value="0">As sung</option>
+        <option value="1">+1 octave</option>
+        <option value="2">+2 octaves</option>
+        <option value="-1">−1 octave</option>
+      </select></label>
+    </div>
     <div id="piano" class="piano"></div>
     <div class="melody-row">
       <label class="row"><span>Instrument</span><select id="instrument"></select></label>
@@ -75,7 +87,7 @@
       <label class="row"><span>Melody volume</span><input type="range" id="lead-volume" min="0" max="100" value="45"></label>
       <span class="octave">Octave <b id="octave-out">0</b></span>
     </div>
-    <p class="help"><b>Free</b>: you play. <b>Guide</b>: a melody is written for the groove, silently; its notes fall on the stage and light the keys ahead of time, and you play them (Perfect, Good, Miss). <b>Auto</b>: the melody plays itself. <kbd>C</kbd> switches. The two letter rows play the groove's scale, so there is no wrong note. Ringed keys: the root. Dotted keys: the three notes of the chord playing now, good places to land. The top row is the middle row an octave up.</p>
+    <p class="help"><b>Free</b>: you play. <b>Guide</b>: a melody is written for the groove, silently; its notes fall on the stage and light the keys ahead of time, and you play them (Perfect, Good, Miss). <b>Auto</b>: the melody plays itself. <kbd>C</kbd> switches. <b>Sing</b>: hum or sing into the microphone, the instrument plays your note, moved to the nearest note of the scale (best with headphones, so the mic doesn't hear the music). The two letter rows play the groove's scale, so there is no wrong note. Ringed keys: the root. Dotted keys: the three notes of the chord playing now, good places to land. The top row is the middle row an octave up.</p>
   </section>
 
   <section>
@@ -115,6 +127,7 @@
 <script src="groove.js"></script>
 <script src="melody.js"></script>
 <script src="composer.js"></script>
+<script src="sing.js"></script>
 <script src="stage.js"></script>
 <script src="main.js"></script>
 </body>

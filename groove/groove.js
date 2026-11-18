@@ -283,7 +283,7 @@ class Groove {
       const k = (i - fill.from + 1) / (16 - fill.from);
       this.bpm = fill.fromBpm + (fill.to.bpm - fill.fromBpm) * k;
     }
-    this.steps.push({ step: i, t });
+    this.steps.push({ step: i, t, abs });
     // Swing: the off-sixteenths come a little late.
     const sixteenth = 60 / this.bpm / 4;
     const swung = t + (i % 2 ? this.core.swing * sixteenth : 0);

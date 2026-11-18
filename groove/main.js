@@ -156,6 +156,7 @@ function applyLeadSound(styleName) {
 applyLeadSound(groove.core.name);
 const melody = new Melody(ctx, lead, harmony);
 const composer = new Composer(groove, harmony, melody);
+const singer = new Singer(ctx, lead, harmony, groove, melody);
 groove.onStep = (i, abs, t, sixteenth) => composer.onStep(i, abs, t, sixteenth);
 // The lead also goes to the echo, as much as the style's keys do (dub: lots).
 const leadEcho = ctx.createGain();
@@ -520,6 +521,36 @@ function updateScore() {
 
 $("lead-volume").addEventListener("input", (e) => lead.set("volume", e.target.value / 100));
 
+// ---- Sing (microphone) ----
+
+$("sing").addEventListener("click", async () => {
+  const b = $("sing");
+  b.blur();
+  if (singer.on) {
+    singer.stop();
+  } else {
+    await ctx.resume();
+    try {
+      await singer.start();
+    } catch (err) {
+      $("sung").textContent = "Microphone refused or not found";
+      return;
+    }
+  }
+  b.classList.toggle("active", singer.on);
+  b.textContent = singer.on ? "● Listening" : "🎤 Sing";
+});
+$("voice-octave").addEventListener("change", (e) => {
+  singer.octave = e.target.value === "auto" ? "auto" : Number(e.target.value);
+  e.target.blur();
+});
+function updateSing() {
+  $("sing-level").style.width = singer.on ? `${Math.min(100, singer.level * 600)}%` : "0";
+  $("sung").textContent = !singer.on ? ""
+    : singer.note !== null ? `${NOTE_NAMES[singer.note % 12]}${Math.floor(singer.note / 12) - 1}`
+    : singer.level > singer.gate ? "…" : "sing or hum";
+}
+
 // ---- Melody instrument ----
 
 $("instrument").append(new Option("Auto (follows the style)", "auto"));
@@ -631,6 +662,7 @@ function frame() {
     filter: djf.amount, lastDrop: groove.lastDrop, held, lead: melody.log,
     latched: groove.latched && !held.has("build"),
     toast: leadToast,
+    voice: singer.on ? { trail: singer.trail, raw: singer.raw } : null,
     guide: composer.mode === "free" ? null : {
       notes: composer.notes, feedback: composer.feedback, sixteenth: 60 / groove.bpm / 4,
       noteFor: (code) => melody.noteFor(code), game: composer.mode === "guide",
@@ -643,6 +675,7 @@ function frame() {
   });
   drawGrid();
   renderPiano();
+  updateSing();
   updateReadout();
   requestAnimationFrame(frame);
 }

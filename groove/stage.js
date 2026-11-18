@@ -148,6 +148,31 @@ function drawStage(canvas, s) {
     }
   }
 
+  // Your voice: the raw pitch as a rising trail (left = low, right = high), and a ring
+  // where you are now. The note it snaps to shows as a comet (below).
+  if (s.voice && s.voice.trail.length) {
+    const floorY = H * 0.82;
+    g.strokeStyle = s.colors.lead;
+    g.lineWidth = 2 * dpr;
+    g.beginPath();
+    let first = true, lastT = 0;
+    for (const p of s.voice.trail) {
+      const age = s.now - p.t;
+      if (age < 0 || age > 2.5) continue;
+      const x = pitchX(p.midi), y = floorY - age * H * 0.3;
+      if (first || p.t - lastT > 0.08) g.moveTo(x, y); else g.lineTo(x, y); // gaps = silences
+      first = false; lastT = p.t;
+    }
+    g.globalAlpha = 0.55;
+    g.stroke();
+    if (s.voice.raw !== null) {
+      g.globalAlpha = 0.9;
+      g.lineWidth = 2.5 * dpr;
+      g.beginPath(); g.arc(pitchX(s.voice.raw), floorY, 9 * dpr, 0, Math.PI * 2); g.stroke();
+    }
+    g.globalAlpha = 1;
+  }
+
   // Melody notes: comets.
   if (s.lead) {
     for (const n of s.lead) {
