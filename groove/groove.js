@@ -65,6 +65,10 @@ class Groove {
     this.live = { rolling: false, building: false, breaking: false, rollLevel: 0 };
     this.lastDrop = -1; // audio time of the last drop (for the display)
     this.onStep = null; // optional (i, abs, t, sixteenth) → for the melody composer
+    // Optional chord plan (a theme you recorded): one scale degree per bar, looping,
+    // instead of chords chosen by chance. { degrees: [..], startBar, mode }
+    this.chordPlan = null;
+    this.changeComing = false; // does the chord change at the next bar? (bass, composer)
   }
 
   // ---- Live controls (keys held down) ----
@@ -220,9 +224,18 @@ class Groove {
       this.fill = { from: 12, to: this.core, fromBpm: this.bpm };
     }
 
-    if (this.bar > 0) {
-      this.barsInChord++;
-      if (switching || this.barsInChord >= this.core.chordBars) this.changeChord(t);
+    if (this.chordPlan) {
+      // Chords follow the plan, bar by bar.
+      const d = this.planDegree(this.bar);
+      if (d !== this.degree || switching || this.harmony.mode !== this.chordPlan.mode) this.changeChord(t, d);
+      this.nextDegree = this.planDegree(this.bar + 1);
+      this.changeComing = this.nextDegree !== this.degree;
+    } else {
+      if (this.bar > 0) {
+        this.barsInChord++;
+        if (switching || this.barsInChord >= this.core.chordBars) this.changeChord(t);
+      }
+      this.changeComing = this.barsInChord + 1 >= this.core.chordBars;
     }
     if (this.followTempo && !(this.fill && this.fill.to !== this.core)) this.bpm = this.core.bpm;
     this.applySends();
@@ -242,10 +255,24 @@ class Groove {
     }
   }
 
-  changeChord(t) {
-    if (this.nextDegree !== undefined) this.degree = this.nextDegree;
-    // The mode follows whoever plays the harmony (the keys).
-    const mode = this.owners.keys.mode;
+  // Degree of the plan for a bar (the plan loops).
+  planDegree(bar) {
+    const p = this.chordPlan;
+    const n = p.degrees.length;
+    return p.degrees[(((bar - p.startBar) % n) + n) % n];
+  }
+
+  // The chord of the next bar (the composer writes one bar ahead).
+  upcomingDegree() {
+    return this.changeComing && this.nextDegree !== undefined ? this.nextDegree : this.degree;
+  }
+
+  changeChord(t, forced) {
+    if (forced !== undefined) this.degree = forced;
+    else if (this.nextDegree !== undefined) this.degree = this.nextDegree;
+    // The mode follows whoever plays the harmony (the keys), unless a theme sets it:
+    // its notes were sung in that scale.
+    const mode = this.chordPlan ? this.chordPlan.mode : this.owners.keys.mode;
     if (mode !== this.harmony.mode) this.harmony.setKey(this.harmony.root, mode);
     if (!this.harmony.usable(this.degree)) this.degree = 0;
     this.tones = this.harmony.chordTones(this.degree);
@@ -283,7 +310,7 @@ class Groove {
       const k = (i - fill.from + 1) / (16 - fill.from);
       this.bpm = fill.fromBpm + (fill.to.bpm - fill.fromBpm) * k;
     }
-    this.steps.push({ step: i, t, abs });
+    this.steps.push({ step: i, t, abs, bar: this.bar - 1 });
     // Swing: the off-sixteenths come a little late.
     const sixteenth = 60 / this.bpm / 4;
     const swung = t + (i % 2 ? this.core.swing * sixteenth : 0);
@@ -346,8 +373,7 @@ class Groove {
     const pick = { R: 0, 3: 1, 5: 2, 7: 3 };
     let note = ch === "8" ? pitchFrom(this.tones[0], 36) + 12 : pitchFrom(this.tones[pick[ch] ?? 0], 36);
     // Last beat before a chord change: half the time, approach the next root.
-    const lastBar = this.barsInChord === this.core.chordBars - 1;
-    if (lastBar && i >= 13 && Math.random() < 0.5) {
+    if (this.changeComing && i >= 13 && Math.random() < 0.5) {
       const nextRoot = pitchFrom(this.harmony.pc(this.nextDegree), 36);
       note = nextRoot + (Math.random() < 0.5 ? -1 : 1);
     }

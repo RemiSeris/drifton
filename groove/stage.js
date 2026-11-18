@@ -193,17 +193,19 @@ function drawStage(canvas, s) {
         g.lineWidth = 3 * dpr * (1 - a);
         g.beginPath(); g.arc(x, H * 0.88, r + a * H * 0.35, 0, Math.PI * 2); g.stroke();
       }
+      const col = n.layer || s.colors.lead;
       const trail = g.createLinearGradient(0, y, 0, H);
-      trail.addColorStop(0, s.colors.lead);
+      trail.addColorStop(0, col);
       trail.addColorStop(1, "transparent");
       g.globalAlpha = 0.35 * fade;
       g.fillStyle = trail;
       g.fillRect(x - r * 0.35, y, r * 0.7, H - y);
       const halo = g.createRadialGradient(x, y, 0, x, y, r * 3);
-      halo.addColorStop(0, s.colors.lead);
+      halo.addColorStop(0, col);
       halo.addColorStop(1, "transparent");
       g.globalAlpha = 0.5 * fade;
       g.fillStyle = halo;
+      // (a looped layer's notes glow in the layer's colour)
       g.fillRect(x - r * 3, y - r * 3, r * 6, r * 6);
       g.globalAlpha = fade;
       g.fillStyle = "#ffe6f4";
@@ -274,6 +276,37 @@ function drawStage(canvas, s) {
       g.font = `600 ${16 * dpr}px sans-serif`;
       g.fillText("♪ " + s.toast.text, 14 * dpr, 24 * dpr);
     }
+  }
+
+  // Loops: REC light while recording, and one ring per layer showing where it is.
+  if (s.loop) {
+    let x = W - 16 * dpr;
+    const y = 20 * dpr;
+    for (let k = s.loop.layers.length - 1; k >= 0; k--) {
+      const l = s.loop.layers[k];
+      g.globalAlpha = l.muted ? 0.25 : 0.9;
+      g.strokeStyle = l.color;
+      g.lineWidth = 3 * dpr;
+      g.beginPath(); g.arc(x, y, 8 * dpr, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * Math.max(0.02, l.frac)); g.stroke();
+      g.globalAlpha *= 0.3;
+      g.beginPath(); g.arc(x, y, 8 * dpr, 0, Math.PI * 2); g.stroke();
+      x -= 24 * dpr;
+    }
+    if (s.loop.armed || s.loop.rec !== null) {
+      const blink = s.loop.armed ? 0.4 + 0.6 * (Math.sin(s.now * 10) > 0) : 1;
+      g.globalAlpha = blink;
+      g.fillStyle = "#ff5a6e";
+      g.beginPath(); g.arc(x - 4 * dpr, y, 6 * dpr, 0, Math.PI * 2); g.fill();
+      g.font = `600 ${12 * dpr}px sans-serif`;
+      g.textAlign = "right";
+      g.fillText(s.loop.armed ? "REC on the one" : "REC", x - 16 * dpr, y + 4 * dpr);
+      g.textAlign = "start";
+      if (s.loop.rec !== null) {
+        g.globalAlpha = 0.8;
+        g.fillRect(0, H - 3 * dpr, W * s.loop.rec, 3 * dpr);
+      }
+    }
+    g.globalAlpha = 1;
   }
 
   // Drop: white flash and the word.

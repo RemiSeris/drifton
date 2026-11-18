@@ -245,6 +245,18 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
   anneau, comète de la note jouée. Chaque note chantée est notée sur l'horloge du groove
   (`singer.take`, en doubles croches) pour la suite : construire autour d'une boucle
   fredonnée.
+- **Boucle et construction** (`groove/looper.js`) : Record s'arme et part sur le prochain
+  « un », pour 1, 2 ou 4 mesures ; prend tes notes du clavier et du micro (pas celles de
+  l'ordinateur), corrigées de la latence de sortie (et ~50 ms pour la voix), recalées à la
+  double croche. Chaque prise devient une couche qui boucle avec l'instrument du moment
+  (son propre synthé) ; jusqu'à 4 couches, coupables et supprimables (station de boucles).
+  La première est le **thème** : avec Build, le groove ne tire plus ses accords au hasard
+  (`groove.chordPlan`, un degré par mesure, en boucle) ; pour chaque mesure, l'accord de la
+  gamme qui colle le mieux (note dans la triade = sa durée, ×2 sur le premier temps, ×1,5
+  sur un temps ; septième = 0,4 ; demi-ton au-dessus d'une note de l'accord = pénalité ;
+  léger bonus à la tonique, léger malus à la répétition). Le mode reste celui du thème. En
+  Guide, le compositeur te fait rejouer le thème. Scène : voyant REC, anneau par couche,
+  comètes aux couleurs des couches. Testé : D F A F | G B D B → Dm7 / G7.
 - **Instrument de la mélodie** : menu (ou touche M, « , » en AZERTY) avec *Auto* (le son suit
   le style) et 12 instruments faits avec le même petit synthé : piano, piano électrique
   (trémolo), orgue (deux tirettes, effet de cabine tournante), clavinet, synthé, cordes,
@@ -288,6 +300,8 @@ donc il n'a pas sa place dans Focus music. C'est un jouet du Lab.
 GitHub Pages publie la branche `main` (racine) : https://rooxam.github.io/drifton/ (page d'accueil), puis `/generator/`, `/synth/`, `/player/`, `/pads/`, `/score/`.
 
 ## Journal
+
+- **2026-11-18** — Boucle fredonnée : enregistrement (clavier ou voix) recalé sur la grille, couches en boucle avec leur instrument, et la musique qui se construit autour du thème (accords choisis pour lui, Guide qui le fait rejouer).
 
 - **2026-11-18** — Chant au micro : on fredonne, l'instrument joue la note recalée sur la gamme. Prise des notes sur l'horloge du groove, en vue de la boucle fredonnée.
 

@@ -90,6 +90,7 @@ class Composer {
     this.melody = melody;
     this.mode = "free";  // "free" | "guide" | "auto"
     this.notes = [];     // planned and recent notes
+    this.themeSource = null; // optional () → looper with a theme: Guide hands you the theme
     this.reset();
     // Guide game.
     this.streak = 0; this.best = 0; this.hits = 0; this.judgedCount = 0;
@@ -134,6 +135,18 @@ class Composer {
 
   planBar(bar, absNow, tNow, sixteenth) {
     const g = this.groove;
+    // Guide with a recorded theme: the notes to play are the theme's, bar by bar.
+    const src = this.mode === "guide" && this.themeSource ? this.themeSource() : null;
+    if (src) {
+      for (const n of src.themeBar(g.bar)) {
+        const abs = absNow + 16 + n.o;
+        this.notes.push({
+          abs, len: n.len, step: null, code: n.code, vel: 0.8,
+          t: tNow + (abs - absNow) * sixteenth, end: undefined, judged: null,
+        });
+      }
+      return;
+    }
     const book = PHRASES[g.core.name] || PHRASES.Funk;
     const pos = (bar - 1) % 4; // place in the 4-bar phrase
     if (pos === 0 || !this.phrase) {
@@ -146,8 +159,7 @@ class Composer {
     const rhythm = pos <= 1 ? ph.a : pos === 2 ? ph.b : ph.cadence;
 
     // The chord that will be playing in that bar.
-    const changes = g.barsInChord + 1 >= g.core.chordBars;
-    const degree = changes && g.nextDegree !== undefined ? g.nextDegree : g.degree;
+    const degree = g.upcomingDegree();
     const tones = this.harmony.chordTones(degree);
     const chord = book.sevenths ? tones.slice(0, 4) : tones.slice(0, 3);
     const triad = tones.slice(0, 3);

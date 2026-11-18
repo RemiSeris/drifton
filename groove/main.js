@@ -157,7 +157,17 @@ applyLeadSound(groove.core.name);
 const melody = new Melody(ctx, lead, harmony);
 const composer = new Composer(groove, harmony, melody);
 const singer = new Singer(ctx, lead, harmony, groove, melody);
-groove.onStep = (i, abs, t, sixteenth) => composer.onStep(i, abs, t, sixteenth);
+
+// Each loop layer gets its own synth, with the melody's sound at the moment of recording.
+const looper = new Looper(ctx, groove, harmony, melody, () => ({
+  synth: new Synth(ctx, { ...lead.params }, master.input, master.send),
+  label: instrument === "auto" ? `${groove.core.name} sound` : INSTRUMENTS[instrument].label,
+}));
+singer.onNote = (midi, t, on) => looper.capture(midi, t, on, "voice");
+groove.onStep = (i, abs, t, sixteenth) => {
+  composer.onStep(i, abs, t, sixteenth);
+  looper.onStep(i, abs, t, sixteenth);
+};
 // The lead also goes to the echo, as much as the style's keys do (dub: lots).
 const leadEcho = ctx.createGain();
 leadEcho.gain.value = 0;
@@ -358,6 +368,7 @@ function press(act, e) {
     ctx.resume();
     const code = melodyCode(e);
     melody.press(code);
+    if (melody.down.has(code)) looper.capture(melody.down.get(code), ctx.currentTime, true, "keys");
     // Judge against what you hear: the sound leaves the speakers a bit after ctx time.
     composer.judge(code, ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0));
     return;
@@ -425,7 +436,12 @@ window.addEventListener("keydown", (e) => {
 
 window.addEventListener("keyup", (e) => {
   const act = action(e);
-  if (act === "note") melody.release(melodyCode(e));
+  if (act === "note") {
+    const code = melodyCode(e);
+    const midi = melody.down.get(code);
+    melody.release(code);
+    if (midi !== undefined) looper.capture(midi, ctx.currentTime, false, "keys");
+  }
   else if (act) release(act);
 }, true);
 
@@ -551,6 +567,69 @@ function updateSing() {
     : singer.level > singer.gate ? "…" : "sing or hum";
 }
 
+// ---- Loop & build ----
+
+composer.themeSource = () => ($("guide-theme").checked && looper.theme ? looper : null);
+
+$("rec").addEventListener("click", async () => {
+  $("rec").blur();
+  await ctx.resume();
+  if (looper.armed || looper.rec) { looper.cancel(); return; }
+  if (!groove.running) await togglePlay();
+  looper.arm(Number($("loop-bars").value));
+});
+$("build").addEventListener("change", (e) => {
+  looper.build = e.target.checked;
+  looper.applyTheme();
+  e.target.blur();
+});
+$("clear-loops").addEventListener("click", (e) => { looper.clear(); e.target.blur(); });
+
+let loopMessage = "";
+looper.onChange = (what) => {
+  loopMessage = what === "empty" ? "Nothing heard: try again, a bit louder or with the keys." : "";
+  renderLayers();
+};
+function renderLayers() {
+  const el = $("layers");
+  el.innerHTML = "";
+  looper.layers.forEach((l, k) => {
+    const row = document.createElement("div");
+    row.className = "layer" + (l.muted ? " muted" : "");
+    row.style.setProperty("--c", l.color);
+    const role = k === 0 ? (looper.build ? " · theme, chords follow it" : " · theme") : "";
+    row.innerHTML = `<span class="dot"></span><span class="what">Layer ${k + 1} · ${l.label} · ${l.bars} bar${l.bars > 1 ? "s" : ""} · ${l.notes.length} notes${role}</span>`;
+    const mute = document.createElement("button");
+    mute.textContent = l.muted ? "Unmute" : "Mute";
+    mute.onclick = () => { l.muted = !l.muted; if (l.muted) l.synth.allOff(); renderLayers(); mute.blur(); };
+    const del = document.createElement("button");
+    del.textContent = "Delete";
+    del.onclick = () => looper.remove(k);
+    row.append(mute, del);
+    el.append(row);
+  });
+  $("clear-loops").hidden = !looper.layers.length;
+}
+renderLayers();
+
+// Where a layer or the take is, as a fraction of its loop, at the step sounding now.
+function loopFrac(startBar, bars) {
+  const now = ctx.currentTime;
+  let cur = null;
+  for (const st of groove.steps) if (st.t <= now) cur = st;
+  if (!cur) return 0;
+  const L = bars * 16;
+  return (((((cur.bar - startBar) * 16 + cur.step) % L) + L) % L) / L;
+}
+function updateLoop() {
+  const r = looper.rec;
+  $("rec").classList.toggle("active", !!(looper.armed || r));
+  $("rec").textContent = looper.armed ? "● Waiting for the one" : r ? "● Recording" : "⏺ Record";
+  $("rec-status").textContent = r ? `${Math.min(r.bars, Math.floor(loopFrac(r.startBar, r.bars) * r.bars) + 1)} / ${r.bars}`
+    : looper.layers.length >= MAX_LAYERS ? "4 layers: delete one to record again" : loopMessage;
+  $("rec").disabled = looper.layers.length >= MAX_LAYERS && !r && !looper.armed;
+}
+
 // ---- Melody instrument ----
 
 $("instrument").append(new Option("Auto (follows the style)", "auto"));
@@ -663,6 +742,11 @@ function frame() {
     latched: groove.latched && !held.has("build"),
     toast: leadToast,
     voice: singer.on ? { trail: singer.trail, raw: singer.raw } : null,
+    loop: {
+      armed: !!looper.armed,
+      rec: looper.rec ? loopFrac(looper.rec.startBar, looper.rec.bars) : null,
+      layers: looper.layers.map((l) => ({ color: l.color, frac: loopFrac(l.startBar, l.bars), muted: l.muted })),
+    },
     guide: composer.mode === "free" ? null : {
       notes: composer.notes, feedback: composer.feedback, sixteenth: 60 / groove.bpm / 4,
       noteFor: (code) => melody.noteFor(code), game: composer.mode === "guide",
@@ -676,6 +760,7 @@ function frame() {
   drawGrid();
   renderPiano();
   updateSing();
+  updateLoop();
   updateReadout();
   requestAnimationFrame(frame);
 }

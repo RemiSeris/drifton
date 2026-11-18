@@ -42,6 +42,7 @@ class Singer {
     this.trail = [];        // { midi (float), t } of the last seconds, for the stage
     this.take = [];         // notes sung: { midi, start, end } in sixteenths on the groove clock
     this.autoShift = null;  // octave shift chosen in "auto" (kept while it fits)
+    this.onNote = null;     // optional (midi, t, on) → the looper records your voice
   }
 
   // Start listening. `source` (optional) replaces the microphone (used by the tests).
@@ -153,6 +154,7 @@ class Singer {
     const vel = Math.min(1, 0.5 + rms * 8);
     this.lead.noteOn(midi, vel, t);
     this.note = midi;
+    if (this.onNote) this.onNote(midi, t, true);
     // For the comets and the on-screen keyboard: which key plays this note, if any.
     const code = [...MELODY_ROWS[0], ...MELODY_ROWS[1]].find((c) => this.melody.noteFor(c) === midi) || "voice";
     this.logEntry = { midi, t, end: Infinity, code };
@@ -169,6 +171,7 @@ class Singer {
   release(t) {
     if (this.note === null) return;
     this.lead.noteOff(this.note, t);
+    if (this.onNote) this.onNote(this.note, t, false);
     if (this.logEntry) this.logEntry.end = t;
     if (this.takeEntry) this.takeEntry.end = this.groovePos(t);
     this.note = null;
